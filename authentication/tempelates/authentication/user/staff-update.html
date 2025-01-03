@@ -1,0 +1,33 @@
+{% extends 'base_staff.html' %}
+
+{% block content %}
+<style>
+    .main-content {
+        margin-top: -50px;
+        min-height: calc(100vh - 64px);
+        margin-left: 3%;
+    }
+    .sidebar-menu a:hover {
+        background: #4338ca;
+    }
+    
+    /* Header & Navigation */
+    .site-header {
+        display: none;
+    }
+    .sidebar {
+        background: #23205f;
+    }
+    .sidebar-toggle{
+        background: #23205f;
+    }
+    .site-footer {
+        display: none;
+    }
+</style>
+
+{% include 'authentication/user-update.html' %}
+
+
+
+{% endblock content %}

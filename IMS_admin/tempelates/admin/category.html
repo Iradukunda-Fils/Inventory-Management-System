@@ -1,0 +1,51 @@
+{% extends 'base_admin.html' %}
+
+{% block content %}
+
+{% include 'search-engine.html' %}
+    
+<div class="table table-striped table-bordered table-sm">
+  <h2 class="mb-4 " style="position:absolute; margin-top: 0px">Categories</h2>
+</div>
+<a ></a>
+  
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Created</th>
+                    <th class="table-action">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ category.name }}</td>
+                    <td>{{ category.description }}</td>
+                    <td>{{ category.created }}</td>
+                    <td>
+                        <a href="{% url 'admin-update-category' pk=category.id %}" class="btn btn-primary btn-sm me-2">
+                            <i class="fa fa-pencil-alt"></i> Edit
+                        </a>
+                        <a href="{% url 'admin-delete-category' pk=category.id %}" class="btn btn-danger btn-sm">
+                            <i class="fa fa-trash"></i> Rem
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan=5 style="text-align: center;">No Category found..!</td>
+                </tr>
+                {% endfor %}
+                
+            </tbody>
+        </table>
+    </div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.oaistatic.com/bootstrap/5.2.3/js/bootstrap.bundle.min.js" defer></script>
+{% endblock content %}

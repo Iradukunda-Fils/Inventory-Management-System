@@ -1,0 +1,112 @@
+{% extends 'base-auth.html' %}
+
+{% block title %}Login | Authentication System{% endblock %}
+
+<style>
+</style>
+
+{% block auth-content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <i class="fas fa-user-circle auth-icon"></i>
+            <h2>Welcome Back!</h2>
+            <p class="auth-subtitle">Sign in to access your account</p>
+        </div>
+        
+        <form method="POST" class="auth-form" id="loginForm" novalidate>
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- Username Field -->
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-icon">
+                        <i class="fas fa-user"></i>
+                    </span>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                    <div class="error-message">
+                        {{ form.username.errors|striptags }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Password Field -->
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-icon">
+                        <i class="fas fa-lock"></i>
+                    </span>
+                    {{ form.password }}
+                    {% if form.password.errors %}
+                    <div class="error-message">
+                        {{ form.password.errors|striptags }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Remember Me and Forgot Password -->
+            <div class="form-options">
+                <label class="remember-me">
+                    <input type="checkbox" name="remember" class="remember-checkbox">
+                    <span>Remember me</span>
+                </label>
+                <a href="" class="forgot-password">
+                    Forgot Password?
+                </a>
+            </div>
+
+            <!-- Sign In Button -->
+            <button type="submit" class="auth-button">
+                <i class="fas fa-sign-in-alt"></i> Sign In
+            </button>
+        </form>
+
+        <!-- Social Login Options
+        <div class="social-login">
+            <p class="social-login-text">Or continue with</p>
+            <div class="social-buttons">
+                <a href="" class="social-button google">
+                    <i class="fab fa-google"></i>
+                </a>
+                <a href="" class="social-button facebook">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+            </div>
+        </div> -->
+
+        
+        {% if user.is_authenticated and user.role == 'admin' %}
+                <!-- Sign Up Redirect -->
+                <div class="auth-footer">
+                  <p>Want to create another User? <a href="{% url 'register' %}" class="sign-up-link">Regist</a></p>
+                </div>
+      {% endif %}
+    </div>
+</div>
+{% endblock auth-content %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const loginForm = document.getElementById("loginForm");
+
+    // Add 'was-validated' class to show validation feedback after form submission attempt
+    loginForm.addEventListener("submit", function (event) {
+        if (!loginForm.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        loginForm.classList.add("was-validated");
+    }, false);
+});
+
+</script>
