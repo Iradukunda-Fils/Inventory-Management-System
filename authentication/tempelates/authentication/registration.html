@@ -1,0 +1,131 @@
+{% extends 'base-auth.html' %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}Register | Authentication System{% endblock %}
+
+
+{% block auth-content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <i class="fas fa-user-plus auth-icon"></i>
+            <h2>Create Accounts</h2>
+            <p class="auth-subtitle">This is the registration page</p>
+        </div>
+
+        <form method="POST" class="auth-form" id="registerForm" novalidate>
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Username Field -->
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-icon">
+                        <i class="fas fa-user"></i>
+                    </span>
+                    {{ form.username }}
+                </div>
+                {% if form.username.errors %}
+                <div class="error-message">
+                    {{ form.username.errors|striptags }}
+                </div>
+                {% endif %}
+            </div>
+            <br>
+
+            <!-- Role Selection Field -->
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-icon">
+                        <i class="fas fa-user-tag"></i>
+                    </span>
+                    {{ form.role }}
+                </div>
+                {% if form.role.errors %}
+                <div class="error-message">
+                    {{ form.role.errors|striptags }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Email Field -->
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-icon">
+                        <i class="fas fa-envelope"></i>
+                    </span>
+                    {{ form.email }}
+                </div>
+                {% if form.email.errors %}
+                <div class="error-message">
+                    {{ form.email.errors|striptags }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Password Field -->
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-icon">
+                        <i class="fas fa-lock"></i>
+                    </span>
+                    {{ form.password }}
+                </div>
+                {% if form.password.errors %}
+                <div class="error-message">
+                    {{ form.password.errors|striptags }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Confirm Password Field -->
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-icon">
+                        <i class="fas fa-lock"></i>
+                    </span>
+                    {{ form.password_confirm }}
+                </div>
+                {% if form.password_confirm.errors %}
+                <div class="error-message">
+                    {{ form.password_confirm.errors|striptags }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Register Button -->
+            <button type="submit" class="auth-button">
+                <i class="fas fa-user-plus"></i> Create
+            </button>
+        </form>
+
+        <!-- Social Login Options
+<div class="social-login">
+  <p class="social-login-text">Or continue with</p>
+  <div class="social-buttons">
+      <a href="" class="social-button google">
+          <i class="fab fa-google"></i>
+      </a>
+      <a href="" class="social-button facebook">
+          <i class="fab fa-facebook-f"></i>
+      </a>
+  </div>
+</div> -->
+
+    {% if user.is_authenticated and user.role == 'admin' %}
+        <!-- Redirect to Sign In -->
+        <div class="auth-footer">
+            <p>If want to test? <a href="{% url 'login' %}" class="sign-in-link">Login</a></p>
+        </div>
+      {% endif %}
+    </div>
+</div>
+{% endblock auth-content %}

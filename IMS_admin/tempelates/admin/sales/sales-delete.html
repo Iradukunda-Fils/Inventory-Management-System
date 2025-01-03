@@ -1,0 +1,18 @@
+{% extends 'base_admin.html' %}
+
+{% block content %}
+
+<div class="container">
+    <h2>Remove Sales</h2>
+    <form action="" method="POST">
+        {% csrf_token %}
+        <div class="card">
+            <p>Are you sure you want to remove sale history of <span>{{ sale.product.name }}</span>?</p>
+            <div class="btn-container">
+                <button class="btn btn-danger" type="submit">Yes, Remove</button>
+                <a class="btn btn-primary" href="{% url 'admin-category' %}">No</a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock content %}

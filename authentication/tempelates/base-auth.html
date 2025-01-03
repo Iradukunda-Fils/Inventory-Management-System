@@ -1,0 +1,92 @@
+{% load static %}
+{% load form_tags %}
+<!-- base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Authentication System{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+    
+    <!-- Modern CSS Reset -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/modern-normalize/2.0.0/modern-normalize.min.css">
+    
+    <!-- Google Fonts - Poppins -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap">
+    
+    <!-- Font Awesome 6 for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/auth/style.css' %}">
+    
+    
+
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="site-header">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <a href="">
+                    <img src="{% static 'img/logo.png' %}" alt="Logo" class="logo">
+                </a>
+            </div>
+            <div class="nav-links">
+                {% if user.is_authenticated and user.role == 'staff' %}
+                    <span class="welcome-text">Your Welcome Back User, {{ user.username }}</span>
+                    <a href="{% url 'staff-logout' %}" class="nav-link">Logout</a>
+                    <a href="" class="nav-link">Home</a>
+                {% elif user.is_authenticated and user.role == 'admin' %}
+                <span class="welcome-text">Your Welcome Back Admin, {{ user.username }}</span>
+                    <a href="{% url 'admin-logout' %}" class="nav-link">Logout</a>
+                    <a href="{% url 'admin-dashboard' %}" class="nav-link">Home</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="nav-button">Login</a>
+                {% endif %}
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+                <button type="button" class="close-alert">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% block auth-content %}
+        {% endblock auth-content %}
+        <!-- Footer Section -->
+    <footer class="site-footer" >
+        <div class="footer-content">
+            <p>&copy; {% now "Y" %} Your Company. All rights reserved.</p>
+        </div>
+    </footer>
+    </main>
+
+    
+
+    <!-- jQuery (for Bootstrap) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" defer></script>
+    
+    
+    <!-- Custom JavaScript -->
+     <!-- src="{% static 'js/auth.js' %}" defer -->
+    
+    {% block ex_script %}
+    <script src="{% static 'js/auth.js' %}" defer></script>
+    {% endblock ex_script %}
+
+</body>
+</html>

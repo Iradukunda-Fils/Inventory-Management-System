@@ -1,0 +1,139 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Staff Dashboard{% endblock %}</title>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/b-admin.css' %}">
+    <link rel="stylesheet" href="{% static 'css/forms.css' %}">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.oaistatic.com/bootstrap/5.2.3/css/bootstrap.min.css">
+    
+    
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://cdn.oaistatic.com/fonts/inter/inter.css">
+    
+</head>
+
+<body class="dashboard-body">
+    <!-- Loading Spinner -->
+    <div class="spinner-overlay" id="spinner">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+    <!-- Sidebar Toggle Button -->
+    <button id="sidebarToggle" class="sidebar-toggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="company">
+                <img src="{% static 'img/logo.png' %}" alt="Ella Company" class="company-logo">
+                <div class="company-info">
+                    <h2 class="company-name" style="color: whitesmoke;">IMS Company</h2>
+                    <br>
+                    <p class="company-type" style="color: rgb(215, 232, 247);">{{ user.username }}</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <ul class="sidebar-menu">
+                <li class="{% if request.resolver_match.url_name == 'staff-dashboard' %}active{% endif %}">
+                    <a href="{% url 'staff-dashboard' %}">
+                        <i class="fas fa-gauge-high"></i>
+                        <span>Staff Dashboard</span>
+                    </a>
+                </li>
+                
+                <li class="{% if request.resolver_match.url_name == 'staff-category' %}active{% endif %}">
+                    <a href="{% url 'staff-category' %}">
+                        <i class="fas fa-tags"></i>
+                        <span>Product Categories</span>
+                    </a>
+                </li>
+                <li class="{% if request.resolver_match.url_name == 'staff-product' %}active{% endif %}">
+                    <a href="{% url 'staff-product' %}">
+                        <i class="fas fa-box"></i>
+                        <span>Products</span>
+                    </a>
+                </li>
+                <li class="{% if request.resolver_match.url_name == 'staff-stock-movement' %}active{% endif %}">
+                    <a href="{% url 'staff-stock-movement' %}">
+                        <i class="fas fa-warehouse"></i>
+                        <span>Stock Movement</span>
+                    </a>
+                </li>
+                <li class="{% if request.resolver_match.url_name == 'staff-sales' %}active{% endif %}">
+                    <a href="{% url 'staff-sales' %}">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span>Sales</span>
+                    </a>
+                </li>
+                <!-- <li class="{% if request.resolver_match.url_name == 'analytics' %}active{% endif %}">
+                    <a href="{% url 'analytics' %}">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Analytics</span>
+                    </a>
+                </li> -->
+                <li class="{% if request.resolver_match.url_name == 'staff-sales-summary' %}active{% endif %}">
+                    <a href="{% url 'staff-sales-summary' %}">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <span>Sales Summary</span>
+                    </a>
+                </li>
+                <!-- <li class="{% if request.resolver_match.url_name == 'update-user' %}active{% endif %}">
+                    <a href="{% url 'update-user' user=user.username %}">
+                        <i class="fas fa-user"></i>
+                        <span>My Profile</span>
+                    </a>
+                </li> -->
+                <li class="logout-item">
+                    <a href="{% url 'staff-logout' %}">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+    <div class="content-wrapper">
+            {% if messages %}
+                <div class="messages-container">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        <div class="welcome-container">
+            {% block content %}
+            {% endblock content %}
+        </div>
+    </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.oaistatic.com/jquery/3.6.0/jquery.min.js" defer></script>
+    <script src="https://cdn.oaistatic.com/popper.js/2.11.6/umd/popper.min.js" defer></script>
+    <script src="https://cdn.oaistatic.com/bootstrap/5.2.3/js/bootstrap.bundle.min.js" defer></script>
+    <script src="{% static 'js/b-admin.js' %}" defer></script>
+
+
+</body>
+</html>

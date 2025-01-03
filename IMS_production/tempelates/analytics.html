@@ -1,0 +1,89 @@
+{% extends 'base_admin.html' %}
+
+{% block content %}
+<style>
+    :root {
+        --chart-bg: #f9f9f9;
+        --chart-bar: #463ee1;
+        --chart-bar-hover: #2c2484;
+    }
+
+    .chart-container {
+        max-width: 850px;
+        margin: 40px auto;
+        background-color: var(--chart-bg);
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .chart-title {
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    canvas {
+        max-width: 100%;
+        height: auto;
+    }
+</style>
+
+<div class="chart-container">
+    <h2 class="chart-title">Product Stock Levels</h2>
+    <canvas id="productStockChart"></canvas>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Fetch chart data from context
+    const labels = {{ chart_data.labels|safe }};
+    const data = {{ chart_data.data|safe }};
+    const categories = {{ chart_data.categories|safe }};
+
+    const ctx = document.getElementById('productStockChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Stock Quantity',
+                data: data,
+                backgroundColor: 'var(--chart-bar)',
+                hoverBackgroundColor: 'var(--chart-bar-hover)',
+                borderRadius: 5,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            return `Category: ${categories[context.dataIndex]}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Quantity'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Product Name'
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock content %}

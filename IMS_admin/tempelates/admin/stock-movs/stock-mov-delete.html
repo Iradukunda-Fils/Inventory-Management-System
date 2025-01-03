@@ -1,0 +1,18 @@
+{% extends 'base_admin.html' %}
+
+{% block content %}
+
+<div class="container">
+    <h2>Remove Stock Movement record</h2>
+    <form action="" method="POST">
+        {% csrf_token %}
+        <div class="card">
+            <p>Are you want to remove stock movement record for product <span style="color: rgb(44, 20, 66);">'{{ move.product.name }}'</span> ?</p>
+            <div class="btn-container">
+                <button class="btn btn-danger" type="submit">Yes, Remove</button>
+                <a class="btn btn-primary" href="{% url 'admin-stock-movement' %}">No</a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock content %}

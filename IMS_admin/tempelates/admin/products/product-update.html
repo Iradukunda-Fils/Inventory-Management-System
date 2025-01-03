@@ -1,0 +1,27 @@
+{% extends 'base_admin.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+
+<div class="form-section">
+    <h2>Edit product</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-group">
+                {{ field|as_crispy_field }}
+                {% if field.errors %}
+                    <div class="errorlist">
+                        {% for error in field.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn-primary">
+            <i class="fas fa-pencil-alt"></i> Edit
+        </button>
+    </form>
+</div>
+{% endblock content %}
+    

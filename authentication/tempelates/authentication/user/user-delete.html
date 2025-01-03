@@ -1,0 +1,16 @@
+{% extends 'base_admin.html' %}
+{% endif %}
+
+
+{% block content %}
+<form action="" method="post">
+    {% csrf_token %}
+    <h1>Are You sure you want to delete user <span style="color: blueviolet;">{{ object.username }}</span>..?</h1>
+
+    <button type="submit" class="auth-button">
+        <i class="fas fa-trash"></i> Delete
+    </button><br>
+    <a href="{% url 'list-users' %}" class="auth-button" style="text-decoration: none;">Cancel</a>
+</form>
+
+{% endblock content %}

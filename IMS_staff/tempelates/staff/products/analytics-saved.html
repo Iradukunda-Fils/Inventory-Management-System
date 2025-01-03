@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<style>
+    :root {
+        --primary-color: #463ee1;
+        --secondary-color: #2c2484;
+    }
+
+    .chart-container {
+        width: 80%;
+        max-width: 800px;
+        margin: auto;
+        padding: 20px;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+<div class="chart-container">
+    <canvas id="stockLevelChart"></canvas>
+</div>
+
+<script>
+    // Pass data from Django to JavaScript
+    const labels = JSON.parse('{{ labels|safe }}');
+    const data = JSON.parse('{{ data|safe }}');
+
+    // Chart configuration
+    const ctx = document.getElementById('stockLevelChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels, // Product names
+            datasets: [{
+                label: 'Stock Levels',
+                data: data, // Stock quantities
+                borderColor: 'var(--primary-color)',
+                backgroundColor: 'rgba(70, 62, 225, 0.2)',
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Stock: ${context.raw}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Products'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Stock Quantity'
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock content %}
