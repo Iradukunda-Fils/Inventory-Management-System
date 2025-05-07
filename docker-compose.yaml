@@ -15,10 +15,6 @@ services:
       - "8000:8000"
     env_file:
       - .env
-    environment:
-      DJANGO_SUPERUSER_USERNAME: admin
-      DJANGO_SUPERUSER_EMAIL: admin@example.com
-      DJANGO_SUPERUSER_PASSWORD: admin123
     entrypoint: ["/app/entrypoint.sh"]
     command: ["gunicorn", "Inventory_MS.wsgi:application", "--bind", "0.0.0.0:8000"]
     # Optional if you still want live code editing during development
@@ -50,7 +46,7 @@ services:
 volumes:
   postgres_data:
     driver: local
-    driver_opts:
-      type: none
-      device: /home/iradukunda/Ghost/Databases/IMS/postgres_data
-      o: bind
+    # driver_opts:
+    #   type: none
+    #   device: /home/iradukunda/Ghost/Databases/IMS/postgres_data
+    #   o: bind

@@ -2,32 +2,36 @@
 FROM python:3.11-slim
 
 # Set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive
 
 # Set working directory
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Pre-install dependencies to speed up layer caching
+COPY requirements.txt .
+
+# Install system packages needed for building Python packages
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
     curl \
     netcat-openbsd \
     libffi-dev \
     libssl-dev \
-    build-essential && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-
-# Install pip dependencies separately to leverage Docker cache
-COPY requirements.txt .
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+    build-essential \
+    && pip install --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt \
+    && apt-get purge -y --auto-remove gcc build-essential \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy project files
 COPY . .
 
-# Fix permissions (optional if needed)
+# Optional: Set permissions only if needed (otherwise avoid chmod in Docker)
 RUN chmod +x /app/entrypoint.sh
 
 # Expose the port Django runs on
