@@ -17,23 +17,27 @@ class ProductCreateView(LoginStaff, UserPassesTestMixin, CreateView):
     login_url = reverse_lazy('login')
 
     def form_valid(self, form):
-        # Generate SKU before saving
-        instance = form.save(commit=False)# Ensure SKU is only generated if it doesn't already exist
-        if instance.quantity > 0:
-            if instance.price > 0:
-                instance.sku = instance.generate_sku()
-                instance.save()  # Save the product instance
-            else:
-                form.add_error('price','The price must be greater than 0..')
-                return self.form_invalid(form)
-        else:
-            form.add_error('quantity','The quantity must be greater than 0..')
+        instance = form.save(commit=False)
+    
+        if instance.quantity <= 0:
+            form.add_error('quantity', 'The quantity must be greater than 0.')
             return self.form_invalid(form)
-        super().form_valid(form)
+    
+        if instance.price <= 0:
+            form.add_error('price', 'The price must be greater than 0.')
+            return self.form_invalid(form)
+    
+        instance.sku = instance.generate_sku()
+        instance.save()
+    
         messages.success(
-            self.request, f"Product '{self.object.name}' with category '{self.object.category.name}' was successfully created!"
+            self.request,
+            f"Product '{instance.name}' with category '{instance.category.name}' was successfully created!"
         )
+
         return super().form_valid(form)
+
+        
 
     def test_func(self):
         return not self.request.user.is_admin  # Example: Only allow staff to create products
@@ -112,16 +116,16 @@ class SaleCreateView(LoginStaff, UserPassesTestMixin, CreateView):
     
         # update product quantity based on sale quantity
         if product.quantity >= quantity and quantity > 0:
-            if product.price < sales_price and sales_price > 0:
+            if product.price < sales_price > 0:
                 product.quantity -= quantity
                 product.save()
+                return super().form_valid(form)
             else:
                 # Add error for invalid quantity
                 form.add_error('sale_price', f'Price less than purchase: {product.price}')
                 return self.form_invalid(form)
-        else:
-                # Add error for invalid quantity
-                form.add_error('quantity', f'Quantity not found, available is: {product.quantity}')
-                return self.form_invalid(form)
+        # Add error for invalid quantity
+        form.add_error('quantity', f'Quantity not found, available is: {product.quantity}')
+        return self.form_invalid(form)
     
-        return super().form_valid(form)
+        

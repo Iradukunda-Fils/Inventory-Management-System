@@ -21,7 +21,6 @@ class Category(models.Model):
             models.Index(fields=['name','created']),
         ]
 
-
 class Product(models.Model):
     name = models.CharField(_("Product Name"), max_length=50)
     sku = models.CharField(max_length=50, unique=True)
@@ -33,27 +32,29 @@ class Product(models.Model):
     updated_at = models.DateTimeField(auto_now_add=True)
     
     def save(self, *args, **kwargs):
-        # Generate SKU only if it doesn't already exist
-        self.sku = self.generate_sku()
+        if not self.sku:
+            self.sku = self.generate_sku()
         super().save(*args, **kwargs)
 
     def generate_sku(self):
-        # Use a combination of name and a UUID for uniqueness
         base_sku = self.name[:3].upper() if self.name else 'PRD'
-        unique_id = str(uuid.uuid4()).replace('-', '')[:6]  # Generate a short unique ID
+        unique_id = str(uuid.uuid4()).replace('-', '')[:6]
         return f"{base_sku}-{unique_id}"
     
     def __str__(self):
         return f"Product: {self.name} - Price: {self.price}"
-    
+
     class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['category', 'name'], name='unique_product_name_per_category')
+        ]
         indexes = [
             models.Index(fields=['name']),
             models.Index(fields=['sku']),
             models.Index(fields=['price']),
-            models.Index(fields=['price','name']),
+            models.Index(fields=['price', 'name']),
             models.Index(fields=['quantity']),
-            models.Index(fields=['name','price','quantity']),
+            models.Index(fields=['name', 'price', 'quantity']),
             models.Index(fields=['created_at']),
         ]
 
