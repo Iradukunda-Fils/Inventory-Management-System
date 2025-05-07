@@ -191,7 +191,7 @@ This project is licensed under the MIT License.
 [GitHub](https://github.com/Iradukunda-Fils)
 
 **Youtube Channel to subscribe for learning programming in Kinyarwanda**
-[Youtube] (https://www.youtube.com/@digitalrwanda)
+[youtube] (https://www.youtube.com/@digitalrwanda)
 
 ```
 
