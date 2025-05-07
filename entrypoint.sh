@@ -3,11 +3,6 @@
 # Wait for PostgreSQL to be ready
 echo "Waiting for PostgreSQL to start..."
 while ! nc -z db 5432; do
-  sleep 1
-done
-
-echo "Waiting for PostgreSQL..."
-until pg_isready -h db -U $POSTGRES_USER; do
   sleep 2
 done
 
