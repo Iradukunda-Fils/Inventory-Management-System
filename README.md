@@ -193,9 +193,3 @@ This project is licensed under the MIT License.
 **Youtube Channel to subscribe for learning programming in Kinyarwanda**
 [youtube] (https://www.youtube.com/@digitalrwanda)
 
-```
-
----
-
-Would you like a separate `.env.example` template to include in your repo as well?
-```
