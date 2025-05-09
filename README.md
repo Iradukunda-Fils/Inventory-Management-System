@@ -185,7 +185,7 @@ This project is licensed under the MIT License.
 
 ---
 
-## 👤 Author
+## 👤 Iradukunda Fils
 
 **Iradukunda Fils**
 [GitHub](https://github.com/Iradukunda-Fils)

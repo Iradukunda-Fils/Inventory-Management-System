@@ -85,9 +85,9 @@ class StockMovement(models.Model):
 class Sale(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='sales')
     quantity = models.IntegerField(_("Quantity"))
-    sale_price = models.DecimalField(_("Sale Price"), max_digits=10, decimal_places=2, default=0.00)
+    sale_price = models.DecimalField(_("Sale Price"), max_digits=20, decimal_places=2, default=0.00)
     total_amount = models.IntegerField(_("Total Amount"))
-    total_revenue = models.DecimalField(_("Total Revenue"), max_digits=10, decimal_places=2)
+    total_revenue = models.DecimalField(_("Total Revenue"), max_digits=20, decimal_places=2)
     sale_date = models.DateField(_("Date"), default=timezone.now)
     created_at = models.DateTimeField(auto_now_add=True)
     
