@@ -4,7 +4,7 @@ FROM python:3.11-slim
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    DEBIAN_FRONTEND=noninteractive
+    DEBIAN_FRONTEND=noninteractive 
 
 # Set working directory
 WORKDIR /app
@@ -28,8 +28,9 @@ RUN apt-get update && \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+
 # Copy project files
-COPY . .
+COPY --chown=appuser:appgroup ./ ./
 
 # Optional: Set permissions only if needed (otherwise avoid chmod in Docker)
 RUN chmod +x /app/entrypoint.sh
@@ -39,4 +40,5 @@ EXPOSE 8000
 
 # Entrypoint and default command
 ENTRYPOINT ["/app/entrypoint.sh"]
+
 CMD ["gunicorn", "Inventory_MS.wsgi:application", "--bind", "0.0.0.0:8000"]
