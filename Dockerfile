@@ -28,12 +28,15 @@ RUN apt-get update && \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+RUN groupadd -r appgroup && \
+    useradd -r -g appgroup appuser 
+
 
 # Copy project files
 COPY --chown=appuser:appgroup ./ ./
 
 # Optional: Set permissions only if needed (otherwise avoid chmod in Docker)
-RUN chmod +x /app/entrypoint.sh
+RUN chmod -R 555 /app 
 
 # Expose the port Django runs on
 EXPOSE 8000
