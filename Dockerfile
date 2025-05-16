@@ -36,9 +36,6 @@ RUN groupadd --system appgroup && \
 # Copy files with ownership (requires BuildKit)
 COPY --chown=appuser:appgroup ./ ./
 
-# Set permissions if needed
-RUN chmod -R 755 /app
-
 # Expose Django's port
 EXPOSE 8000
 
