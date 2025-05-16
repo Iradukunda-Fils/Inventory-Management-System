@@ -28,18 +28,23 @@ RUN apt-get update && \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN groupadd -r appgroup && \
-    useradd -r -g appgroup appuser 
+# Create system group and user
+RUN groupadd --system appgroup && \
+    useradd --system --gid appgroup --no-create-home --shell /sbin/nologin appuser
 
 
-# Copy project files
+# Copy files with ownership (requires BuildKit)
 COPY --chown=appuser:appgroup ./ ./
 
-# Optional: Set permissions only if needed (otherwise avoid chmod in Docker)
-RUN chmod -R 555 /app 
+# Set permissions if needed
+RUN chmod -R 755 /app
 
-# Expose the port Django runs on
+# Expose Django's port
 EXPOSE 8000
+
+# Switch to non-root user
+USER appuser
+
 
 # Entrypoint and default command
 ENTRYPOINT ["/app/entrypoint.sh"]
