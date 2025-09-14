@@ -14,14 +14,7 @@ COPY requirements.txt .
 
 # Install system packages needed for building Python packages
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    gcc \
-    libpq-dev \
-    curl \
-    netcat-openbsd \
-    libffi-dev \
-    libssl-dev \
-    build-essential \
+    apt-get install -y --no-install-recommends curl netcat-openbsd \
     && pip install --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt \
     && apt-get purge -y --auto-remove gcc build-essential \
