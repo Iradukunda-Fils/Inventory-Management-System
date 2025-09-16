@@ -6,6 +6,10 @@ while ! nc -z db 5432; do
   sleep 2
 done
 
+echo "starting virtual environment..."
+. .venv/bin/activate
+
+
 # Run migrations
 echo "Running migrations..."
 python manage.py migrate

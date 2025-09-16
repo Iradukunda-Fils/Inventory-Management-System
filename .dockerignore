@@ -4,4 +4,6 @@
 # Bytecode files
 __pycache__/
 *.py[cod]
+./.venv/
+.venv/*
 ./.dockerignore

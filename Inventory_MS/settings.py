@@ -31,6 +31,13 @@ DEBUG = os.getenv('DEBUG', False)
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:8080",
+    "https://staging.twara.rw",
+    "https://www.staging.twara.rw",
+]
+
+
 
 # Application definition
 

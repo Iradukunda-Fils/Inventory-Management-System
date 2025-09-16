@@ -1,0 +1,83 @@
+# ============================================
+# Dockerfile for Django + Gunicorn + Nginx
+# ============================================
+
+ARG IMAGE_VERSION=3.13.7-slim-bookworm
+
+# ----------------------------
+# Base Python image
+# ----------------------------
+FROM python:${IMAGE_VERSION} AS base
+
+LABEL org.opencontainers.image.authors="iradukundafils1@gmail.com" \
+      org.opencontainers.image.title="Inventory_MS" \
+      org.opencontainers.image.description="Django + Gunicorn + Nginx" \
+      org.opencontainers.image.version="1.0.0"
+
+# ----------------------------
+# Environment variables
+# ----------------------------
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive \
+    PATH="/root/.local/bin:$PATH"
+
+# ----------------------------
+# Set working directory
+# ----------------------------
+WORKDIR /app
+
+# ----------------------------
+# Install OS dependencies
+# ----------------------------
+RUN apt-get update --fix-missing && \
+    apt-get install -y --no-install-recommends \
+        nginx \
+        curl \
+        build-essential \
+        gcc \
+        libpq-dev \
+        python3-dev \
+        netcat-openbsd \
+        ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+
+# Copy dependency descriptors first (better cache)
+COPY pyproject.toml uv.lock ./
+
+# ----------------------------
+# Install uv and install Python dependencies
+# ----------------------------
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    uv sync
+
+# ----------------------------
+# Copy project files
+# ----------------------------
+COPY ./ /app
+
+# ----------------------------
+# Nginx configuration
+# ----------------------------
+RUN rm -f /etc/nginx/sites-enabled/default && \
+    mkdir -p /run/nginx /var/lib/nginx/body /var/lib/nginx/tmp /var/log/nginx /var/log/supervisor && \
+    chown -R root:root /var/lib/nginx /var/log/nginx /run/nginx && \
+    # Move custom Nginx config if it exists
+    if [ -f /app/nginx/nginx.conf ]; then \
+        mv /app/nginx/nginx.conf /etc/nginx/conf.d/default.conf; \
+    fi 
+
+# ----------------------------
+# Expose ports
+# ----------------------------
+EXPOSE 80 8000
+
+# ----------------------------
+# Entrypoint & CMD
+# ----------------------------
+# Entrypoint script ensures migrations, static files, or env setup
+ENTRYPOINT ["/app/entrypoint.sh"]
+
+# CMD runs both nginx and gunicorn
+CMD ["/bin/sh", "-c", "nginx && /app/.venv/bin/gunicorn Inventory_MS.wsgi:application --bind 0.0.0.0:8000 --workers 4"]
