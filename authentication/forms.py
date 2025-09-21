@@ -19,7 +19,7 @@ class UserCreationForm(forms.ModelForm):
 
     class Meta:
         model = get_user_model()  # Points to your custom user model
-        fields = ['username', 'email', 'role']
+        fields = ['username', 'email', "phone_number", 'role']
         widgets = {
             'role': forms.Select(attrs={'class': 'select'}),
             'username': forms.TextInput(attrs={'placeholder': 'Username'}),
@@ -54,11 +54,12 @@ class UserCreationForm(forms.ModelForm):
     
 # Custom form to handle username, email, and role
 class UserUpdateForm(forms.ModelForm):
+    
     password = forms.CharField(required=False, widget=forms.PasswordInput(attrs={'placeholder': 'New Password','name': 'update', 'id': 'update'}))
     password_confirm = forms.CharField(required=False, widget=forms.PasswordInput(attrs={'placeholder': 'Confirm New Password', 'name': 'update', 'id': 'update'}))
     class Meta:
         model = get_user_model()
-        fields = ['username', 'role', 'email']
+        fields = ['username', 'role', 'email', "phone_number"]
         widgets = {
             'role': forms.Select(attrs={'class': 'select'}),
             }

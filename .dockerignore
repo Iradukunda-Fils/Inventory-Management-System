@@ -1,9 +1,56 @@
-./.git
-./Dockerfile
-./docker-compose.yml
-# Bytecode files
+# Python cache
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Logs and temporary files
+*.log
+*.pot
 *.py[cod]
-./.venv/
-.venv/*
-./.dockerignore
+*.swp
+*.swo
+*.DS_Store
+*.egg-info/
+*.egg
+*.sqlite3
+*.db
+*.log.*
+
+# Django static & media files (you collect static in container)
+staticfiles/
+media/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.iml
+.git/
+
+# Docker & build files
+Dockerfile*
+dockerfile*
+DockerFile*
+docker-compose.yml
+docker-compose.override.yml
+*.bak
+*.tmp
+*.old
+
+# Node / frontend dependencies (if any)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Coverage reports
+htmlcov/
+.coverage
+
+# pytest cache
+.pytest_cache/

@@ -1,0 +1,52 @@
+# ============================================
+# Django + Celery Worker
+# ============================================
+
+ARG IMAGE_VERSION=3.13.7-slim-bookworm
+
+FROM python:${IMAGE_VERSION} AS build
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY pyproject.toml uv.lock ./
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    ~/.local/bin/uv sync
+
+# Final image
+FROM python:${IMAGE_VERSION} AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive \
+    PATH="/app/.venv/bin:$PATH"
+
+WORKDIR /app
+
+
+# Install minimal system dependencies for runtime
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/* && \
+    # Create user
+    groupadd --system appgroup && \
+    useradd --system --gid appgroup --no-create-home --shell /sbin/nologin appuser
+
+# Copy from build
+COPY --from=build /app /app
+
+# Copy project
+COPY --chown=appuser:appgroup ./ /app
+
+USER appuser
+
+CMD ["celery", "-A", "Inventory_MS", "worker", "--loglevel=info", "--concurrency=2", "-Q", "default"]
+
+
+# Healthcheck: ensure worker responds to ping
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD celery -A Inventory_MS inspect ping || exit 1

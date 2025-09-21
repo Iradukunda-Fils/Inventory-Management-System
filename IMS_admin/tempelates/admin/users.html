@@ -19,6 +19,7 @@
                     <th>Id</th>
                     <th>User</th>
                     <th>E_mail</th>
+                    <th>PHONE_NUMBER</th>
                     <th>Role</th>
                     <th>Password</th>
                     <th class="table-action">Action</th>
@@ -30,6 +31,7 @@
                     <td>{{ forloop.counter }}</td>
                     <td>{{ user.username }}</td>
                     <td>{{ user.email }}</td>
+                    <td>{{ user.phone_number }}</td>
                     <td>{{ user.role }}</td>
                     <td>{{ user.password | truncatechars:20 }}</td>
                     <td>

@@ -1,0 +1,69 @@
+# ============================================
+# Django + Gunicorn/Uvicorn Web Server
+# ============================================
+
+ARG IMAGE_VERSION=3.13.7-slim-bookworm
+FROM python:${IMAGE_VERSION} AS build
+
+# Install system deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install uv + dependencies
+COPY pyproject.toml uv.lock ./
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    ~/.local/bin/uv sync
+
+# Final runtime image
+FROM python:${IMAGE_VERSION} AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive \
+    PATH="/app/.venv/bin:$PATH"
+
+WORKDIR /app
+
+# Install minimal system dependencies for runtime
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    netcat-openbsd \
+    && rm -rf /var/lib/apt/lists/* && \
+    # Create non-root user
+    groupadd --system appgroup && \
+    useradd --system --gid appgroup --no-create-home --shell /sbin/nologin appuser
+
+# Copy app with venv
+COPY --from=build /app /app
+
+COPY --chown=appuser:appgroup ./ /app
+
+
+# Prepare static files
+RUN echo "Collecting static files..." && \
+    python manage.py collectstatic --noinput
+
+USER appuser
+
+# ----------------------------
+# Entrypoint & CMD
+# ----------------------------
+ENTRYPOINT ["/app/entrypoint.sh"]
+
+# Default command: Gunicorn with Uvicorn workers
+# Change `Inventory_MS.asgi:application` if you use only WSGI -> `Inventory_MS.wsgi:application`
+CMD ["gunicorn", "Inventory_MS.asgi:application", \
+        "-k", "uvicorn.workers.UvicornWorker", \
+        "--bind", "0.0.0.0:8000", \
+        "--workers=4", \
+        "--threads=2", \
+        "--timeout=120"]
+
+# Healthcheck: ensure Django responds at /health/ endpoint
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD curl -f http://localhost:8000/health/ || exit 1

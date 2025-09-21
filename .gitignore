@@ -1,3 +1,38 @@
-#ignore
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 
-.env
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Logs and temporary files
+*.log
+*.pot
+*.py[cod]
+*.swp
+*.swo
+*.DS_Store
+*.egg-info/
+*.egg
+*.sqlite3
+*.db
+*.log.*
+
+# Django static & media files 
+staticfiles/
+media/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.iml
+.git/
+
+
+# pytest cache
+.pytest_cache/

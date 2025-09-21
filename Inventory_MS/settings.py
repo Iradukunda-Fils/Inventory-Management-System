@@ -61,6 +61,8 @@ INSTALLED_APPS = [
     'crispy_forms',
     "crispy_bootstrap4",
     "crispy_bootstrap5",
+    "django_celery_beat",
+    "phonenumber_field",
     
 ]
 
@@ -184,3 +186,27 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = 'login'
+
+# Celery Configuration 
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://redis:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379/0')
+
+
+# Email Configuration
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"                       # Use SMTP backend
+EMAIL_HOST = "smtp.gmail.com"                                                       # SMTP server
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))                                      # TLS port
+EMAIL_USE_TLS = bool(os.getenv("EMAIL_USE_TLS", True))                              # Secure connection
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'iradukundafils1@gmail.com')          # your email
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")                              # app password (not your Gmail password!)
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+
+# SMS Configurations
+SMS_API_KEY = os.getenv("SMS_API_KEY", None)
+SMS_API = os.getenv("SMS_API", None)
+SMS_SENDER = os.getenv("SMS_SENDER", None)
+
+
+

@@ -20,6 +20,9 @@ from django.urls import path, include
 #-----------------------<> IMPORTS FOR MEDIA URL IN MY CONF <>----------------------#
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import JsonResponse
+
+
 
 urlpatterns = [
     path('adn/', admin.site.urls),
@@ -27,6 +30,10 @@ urlpatterns = [
     path('admin-dashboard/',include('IMS_admin.urls')),
     path('staff-dashboard/',include('IMS_staff.urls')),
     path('info/',include('IMS_production.urls')),
+]
+
+urlpatterns += [
+    path("health/", lambda request: JsonResponse({"status": "ok"}), name="health_check"),
 ]
 
 if settings.DEBUG:

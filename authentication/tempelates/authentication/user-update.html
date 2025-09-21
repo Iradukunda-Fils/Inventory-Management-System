@@ -14,9 +14,9 @@
             <p class="auth-subtitle">This is User update Form page</p>
         </div>
 
-        <form method="POST" class="auth-form" id="registerForm" novalidate>
+        <form method="POST" class="auth-form" id="updateForm" novalidate>
             {% csrf_token %}
-            
+
             {% if form.non_field_errors %}
             <div class="alert alert-danger">
                 {% for error in form.non_field_errors %}
@@ -28,46 +28,52 @@
             <!-- Username Field -->
             <div class="form-group">
                 <div class="input-group">
-                    <span class="input-icon">
-                        <i class="fas fa-user"></i>
-                    </span>
+                    <span class="input-icon"><i class="fas fa-user"></i></span>
                     {{ form.username }}
                 </div>
                 {% if form.username.errors %}
-                <div class="error-message">
+                <div class="error-message text-danger small">
                     {{ form.username.errors|striptags }}
                 </div>
                 {% endif %}
             </div>
-            <br>
 
-            {% if user.role == 'admin' %}
+            {% if user.role == "admin" %}
             <!-- Role Selection Field -->
             <div class="form-group">
                 <div class="input-group">
-                    <span class="input-icon">
-                        <i class="fas fa-user-tag"></i>
-                    </span>
+                    <span class="input-icon"><i class="fas fa-user-tag"></i></span>
                     {{ form.role }}
                 </div>
                 {% if form.role.errors %}
-                <div class="error-message">
+                <div class="error-message text-danger small">
                     {{ form.role.errors|striptags }}
                 </div>
                 {% endif %}
             </div>
-            {% else %}
+            {% endif %}
+
+            <!-- Phone Number Field -->
+            <div class="form-group">
+                <div class="input-group">
+                    <span class="input-icon"><i class="fas fa-phone"></i></span>
+                    {{ form.phone_number }}
+                </div>
+                {% if form.phone_number.errors %}
+                <div class="error-message text-danger small">
+                    {{ form.phone_number.errors|striptags }}
+                </div>
+                {% endif %}
+            </div>
 
             <!-- Email Field -->
             <div class="form-group">
                 <div class="input-group">
-                    <span class="input-icon">
-                        <i class="fas fa-envelope"></i>
-                    </span>
+                    <span class="input-icon"><i class="fas fa-envelope"></i></span>
                     {{ form.email }}
                 </div>
                 {% if form.email.errors %}
-                <div class="error-message">
+                <div class="error-message text-danger small">
                     {{ form.email.errors|striptags }}
                 </div>
                 {% endif %}
@@ -76,13 +82,11 @@
             <!-- Password Field -->
             <div class="form-group">
                 <div class="input-group">
-                    <span class="input-icon">
-                        <i class="fas fa-lock"></i>
-                    </span>
-                    {{ form.password }}
+                    <span class="input-icon"><i class="fas fa-lock"></i></span>
+                    {{ form.password  }}
                 </div>
                 {% if form.password.errors %}
-                <div class="error-message">
+                <div class="error-message text-danger small">
                     {{ form.password.errors|striptags }}
                 </div>
                 {% endif %}
@@ -91,23 +95,22 @@
             <!-- Confirm Password Field -->
             <div class="form-group">
                 <div class="input-group">
-                    <span class="input-icon">
-                        <i class="fas fa-lock"></i>
-                    </span>
-                    {{ form.password_confirm }}
+                    <span class="input-icon"><i class="fas fa-lock"></i></span>
+                    {{ form.password_confirm  }}
                 </div>
                 {% if form.password_confirm.errors %}
-                <div class="error-message">
+                <div class="error-message text-danger small">
                     {{ form.password_confirm.errors|striptags }}
                 </div>
                 {% endif %}
             </div>
 
-            <!-- Register Button -->
-            <button type="submit" class="auth-button">
-                <i class="fas fa-pencil"></i> Update
+            <!-- Update Button -->
+            <button type="submit" class="auth-button btn btn-success w-100">
+                <i class="fas fa-save"></i> Save Changes
             </button>
         </form>
+
 
         <!-- Social Login Options
 <div class="social-login">
