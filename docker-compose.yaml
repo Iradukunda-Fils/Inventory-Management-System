@@ -32,14 +32,7 @@ services:
       - "8080:8080"  # Exposed internally to Nginx
     networks:
       - backend
-    deploy:
-      resources:
-        limits:
-          cpus: '2.0'        # At least 2 CPUs
-          memory: 2g         # 2GB RAM
-        reservations:
-          cpus: '1.0'
-          memory: 1g
+      - frontend
 
   # ------------------------
   # Celery Worker
@@ -60,14 +53,6 @@ services:
       - .env
     networks:
       - backend
-    deploy:
-      resources:
-        limits:
-          cpus: '2.0'        # Scale horizontally instead of 1 huge worker
-          memory: 1g
-        reservations:
-          cpus: '1.0'
-          memory: 512m  
 
   # ------------------------
   # Celery Beat 
@@ -88,14 +73,6 @@ services:
       - .env
     networks:
       - backend
-    deploy:
-      resources:
-        limits:
-          cpus: '0.25'       # Very light
-          memory: 256m
-        reservations:
-          cpus: '0.1'
-          memory: 128m
 
   # ------------------------
   # PostgreSQL Database
@@ -117,14 +94,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    deploy:
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 4g         # PostgreSQL loves memory (for caching)
-        reservations:
-          cpus: '1.0'
-          memory: 2g
 
   # ------------------------
   # Redis (Broker / Cache)
@@ -141,12 +110,5 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
-      retries: 5                                                                                         
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1g
-        reservations:
-          cpus: '0.5'
-          memory: 512m
+      retries: 5
+

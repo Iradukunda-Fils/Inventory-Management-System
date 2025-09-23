@@ -44,7 +44,7 @@ COPY --chown=appuser:appgroup ./ /app
 
 USER appuser
 
-CMD ["celery", "-A", "Inventory_MS", "worker", "--loglevel=info", "--concurrency=2", "-Q", "default"]
+CMD ["celery", "-A", "Inventory_MS", "worker", "--loglevel=info", "-Q", "default", "--autoscale=4,1"]
 
 
 # Healthcheck: ensure worker responds to ping

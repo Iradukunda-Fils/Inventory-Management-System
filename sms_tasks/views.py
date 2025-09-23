@@ -181,7 +181,7 @@ def run_task_now(request, pk):
         
         try:
             from sms_tasks.tasks import send_sms
-            result = send_sms.delay(task)
+            result = send_sms.delay(task.id)
             
             # Update task status
             task.status = 'running'
@@ -257,7 +257,7 @@ def bulk_actions(request):
         elif action == 'run_now':
             from sms_tasks.tasks import send_sms
             for task in tasks:
-                send_sms.delay(task)
+                send_sms.delay(task.id)
             tasks.update(status='running')
             messages.success(request, f'{count} tasks queued for execution!')
     

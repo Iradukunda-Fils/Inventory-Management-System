@@ -16,6 +16,7 @@
         "django-crispy-forms==2.3",
         "django-phonenumber-field[phonenumbers]>=8.1.0",
         "filelock==3.16.1",
+        "flower>=2.0.1",
         "gunicorn==23.0.0",
         "httpx>=0.28.1",
         "packaging==24.2",
