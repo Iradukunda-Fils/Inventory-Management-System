@@ -29,7 +29,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', False)
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(', ')
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8080",
@@ -40,13 +40,13 @@ CSRF_TRUSTED_ORIGINS = [
 
 
 # Application definition
-
 INSTALLED_APPS = [
     #IMS apps
     'permission.apps.PermissionConfig',
     'IMS_production.apps.ImsProductionConfig',
     'IMS_admin.apps.AdminConfig',
     'IMS_staff.apps.StaffConfig',
+    'sms_tasks.apps.SmsTasksConfig',
     
     #Django apps
     'django.contrib.admin',
@@ -57,13 +57,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     #Custom apps
-    'authentication.apps.AuthenticationConfig',
+    'authentication',
     'crispy_forms',
     "crispy_bootstrap4",
     "crispy_bootstrap5",
     "django_celery_beat",
     "phonenumber_field",
-    
 ]
 
 

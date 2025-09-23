@@ -1,0 +1,188 @@
+{% extends 'base_admin.html' %}
+
+{% load static %}
+
+{% load admin_form_tags %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-XxUjS8H5z3+2K8d7L7V7vN2+M6Q/T8xK0d+NxkYb8vJvN6Vk9bG0F+Jh3x2bE+gE" crossorigin="anonymous">
+
+<link rel="stylesheet" href="{% static 'css/sms.css' %}">
+
+<div class="auth-container">
+    <div class="auth-card">
+        <!-- Header -->
+        <div class="auth-header text-center mb-4">
+            <i class="fas fa-sms auth-icon"></i>
+            <h2>Send SMS</h2>
+            <p class="auth-subtitle">Send instantly or schedule your message</p>
+        </div>
+
+        <!-- Django messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Form -->
+        <form method="POST" class="auth-form needs-validation" id="smsForm" novalidate>
+            {% csrf_token %}
+
+            <!-- Phone Number -->
+            <div class="form-group mb-3">
+                <label for="{{ form.phone_number.id_for_label }}" class="form-label">
+                    <i class="fas fa-phone"></i> Recipient Phone
+                </label>
+                {{ form.phone_number|add_class:"form-control" }}
+                {% if form.phone_number.help_text %}
+                    <small class="form-text text-muted">{{ form.phone_number.help_text }}</small>
+                {% endif %}
+                {% if form.phone_number.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.phone_number.errors|striptags }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Message -->
+            <div class="form-group mb-3">
+                <label for="{{ form.message.id_for_label }}" class="form-label">
+                    <i class="fas fa-comment-dots"></i> Message
+                </label>
+                {{ form.message|add_class:"form-control" }}
+                {% if form.message.help_text %}
+                    <small class="form-text text-muted">{{ form.message.help_text }}</small>
+                {% endif %}
+                {% if form.message.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.message.errors|striptags }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Sender -->
+            <div class="form-group mb-3">
+                <label for="{{ form.sender.id_for_label }}" class="form-label">
+                    <i class="fas fa-id-badge"></i> Sender ID
+                </label>
+                {{ form.sender|add_class:"form-control" }}
+                {% if form.sender.help_text %}
+                    <small class="form-text text-muted">{{ form.sender.help_text }}</small>
+                {% endif %}
+                {% if form.sender.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.sender.errors|striptags }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Schedule Type -->
+            <div class="form-group mb-3">
+                <label class="form-label"><i class="fas fa-clock"></i> Schedule Type</label>
+                <div class="d-flex gap-3">
+                    {{ form.schedule_type }}
+                </div>
+                {% if form.schedule_type.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.schedule_type.errors|striptags }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Interval Options -->
+            <div id="intervalFields" class="schedule-extra p-3 mb-3 border rounded bg-light" style="display:none;">
+                <h6 class="mb-2"><i class="fas fa-sync-alt"></i> Interval Options</h6>
+                <div class="row">
+                    <div class="col">
+                        <label>Repeat Every</label>
+                        {{ form.every|add_class:"form-control" }}
+                    </div>
+                    <div class="col">
+                        <label>Period</label>
+                        {{ form.period|add_class:"form-select" }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Crontab Options -->
+            <div id="crontabFields" class="schedule-extra p-3 mb-3 border rounded bg-light" style="display:none;">
+                <h6 class="mb-2"><i class="fas fa-calendar-alt"></i> Cron Options</h6>
+                <div class="row g-2">
+                    <div class="col">
+                        <label>Minute</label>
+                        {{ form.minute|add_class:"form-control" }}
+                    </div>
+                    <div class="col">
+                        <label>Hour</label>
+                        {{ form.hour|add_class:"form-control" }}
+                    </div>
+                    <div class="col">
+                        <label>Day of Week</label>
+                        {{ form.day_of_week|add_class:"form-control" }}
+                    </div>
+                    <div class="col">
+                        <label>Day of Month</label>
+                        {{ form.day_of_month|add_class:"form-control" }}
+                    </div>
+                    <div class="col">
+                        <label>Month of Year</label>
+                        {{ form.month_of_year|add_class:"form-control" }}
+                    </div>
+                </div>
+                <small class="form-text text-muted">Use * for any value. Example: "0 9 * * 1" → every Monday at 9 AM</small>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-paper-plane"></i> Send SMS
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-QFj7pS0xjv1V8Lk9j2Tq6L0Z3VvN7y8pT1g7nL0H8vV1y6X9B0Q0R8N0E0Z9X6F3" crossorigin="anonymous"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const smsForm = document.getElementById("smsForm");
+    const scheduleTypeInputs = document.querySelectorAll("input[name='schedule_type']");
+    const intervalFields = document.getElementById("intervalFields");
+    const crontabFields = document.getElementById("crontabFields");
+
+    function toggleFields() {
+        const selected = document.querySelector("input[name='schedule_type']:checked");
+        if (!selected) return;
+        if (selected.value === "interval") {
+            intervalFields.style.display = "block";
+            crontabFields.style.display = "none";
+        } else if (selected.value === "crontab") {
+            intervalFields.style.display = "none";
+            crontabFields.style.display = "block";
+        } else {
+            intervalFields.style.display = "none";
+            crontabFields.style.display = "none";
+        }
+    }
+
+    scheduleTypeInputs.forEach(input => input.addEventListener("change", toggleFields));
+    toggleFields(); // initial load
+
+    // Form validation
+    smsForm.addEventListener("submit", function (event) {
+        if (!smsForm.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        smsForm.classList.add("was-validated");
+    });
+});
+</script>
+
+
+{% endblock content %}
+

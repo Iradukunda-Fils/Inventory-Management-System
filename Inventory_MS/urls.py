@@ -30,6 +30,7 @@ urlpatterns = [
     path('admin-dashboard/',include('IMS_admin.urls')),
     path('staff-dashboard/',include('IMS_staff.urls')),
     path('info/',include('IMS_production.urls')),
+    path("sms/", include(("sms_tasks.urls", "sms_tasks"))),
 ]
 
 urlpatterns += [

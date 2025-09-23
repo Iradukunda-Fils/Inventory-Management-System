@@ -1,0 +1,469 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete SMS Task - Confirmation</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --secondary-color: #6b7280;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .delete-container {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(6px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            padding: 30px;
+            max-width: 780px;
+            width: 100%;
+            margin: 20px;
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+
+        .delete-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .delete-icon {
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, var(--danger-color), #dc2626);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 2.2rem;
+            animation: pulse 2.2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+            100% { transform: scale(1); }
+        }
+
+        .task-details {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 18px;
+            margin: 18px 0;
+            border: 1px solid #e2e8f0;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eef2f7;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-weight: 700;
+            color: #374151;
+            min-width: 140px;
+        }
+
+        .detail-value {
+            color: #6b7280;
+            text-align: right;
+            max-width: 66%;
+            word-break: break-word;
+        }
+
+        .warning-box {
+            background: #fff7ed;
+            border: 1px solid #fbbf24;
+            border-radius: 10px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .warning-box .warning-icon {
+            color: #b45309;
+            margin-right: 10px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 18px;
+            flex-wrap: wrap;
+        }
+
+        .btn-danger-custom {
+            background: linear-gradient(135deg, var(--danger-color), #dc2626);
+            border: none;
+            color: white;
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-danger-custom:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(239,68,68,0.22);} 
+
+        .btn-secondary-custom {
+            background: var(--secondary-color);
+            border: none;
+            color: white;
+            padding: 12px 26px;
+            border-radius: 10px;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-secondary-custom:hover { transform: translateY(-2px); }
+
+        .status-badge { padding: 6px 12px; border-radius: 14px; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-running { background: #dbeafe; color: #1e40af; }
+        .status-success { background: #d1fae5; color: #065f46; }
+        .status-failed { background: #fee2e2; color: #991b1b; }
+        .status-disabled { background: #f3f4f6; color: #6b7280; }
+
+        .loading-state { display: none; }
+        .loading-state.show { display: inline-flex; align-items: center; gap:8px; }
+
+        .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid white; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
+
+        .consequences-list { color: #7c2d12; margin: 0; padding-left: 18px; }
+        .consequences-list li { margin-bottom: 6px; }
+
+        .muted-small { color:#6b7280; font-size:0.9rem; }
+
+        /* Toast position */
+        #undoToast { position: fixed; right: 20px; bottom: 20px; z-index: 1200; }
+
+    </style>
+</head>
+<body>
+    <div class="delete-container" role="dialog" aria-labelledby="deleteTitle" aria-describedby="deleteDesc">
+        <!-- Header -->
+        <div class="delete-header">
+            <div class="delete-icon" aria-hidden="true">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+            <h2 id="deleteTitle" class="h3 mb-1 text-danger">Delete SMS Task</h2>
+            <p id="deleteDesc" class="text-muted mb-0">Are you sure you want to delete this SMS task? This action cannot be undone.</p>
+        </div>
+
+        <!-- Task Details -->
+        <div class="task-details">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2 text-primary"></i>Task Information</h5>
+                <div class="muted-small">ID: <strong>{{ object.pk }}</strong></div>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">Task Name:</span>
+                <span class="detail-value"><strong>{{ object.name }}</strong></span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">Send Type:</span>
+                <span class="detail-value">{{ object.get_send_type_display }}</span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">Phone Numbers:</span>
+                <span class="detail-value">{{ object.get_phone_list|length }} number{{ object.get_phone_list|length|pluralize }}
+                    <button id="viewPhonesBtn" class="btn btn-sm btn-link ms-2" type="button">View</button>
+                </span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">Message Preview:</span>
+                <span class="detail-value text-end">{{ object.get_message_preview }}</span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">Current Status:</span>
+                <span class="detail-value text-end">
+                    <span class="status-badge status-{{ object.status }}">{{ object.get_status_display }}</span>
+                </span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">Schedule:</span>
+                <span class="detail-value">{{ object.schedule_info }}</span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">Execution Stats:</span>
+                <span class="detail-value">{{ object.execution_count }} runs, {{ object.success_count }} success, {{ object.failed_count }} failed</span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">Created:</span>
+                <span class="detail-value">{{ object.created_at|date:"M d, Y H:i" }} by {{ object.created_by.username }}</span>
+            </div>
+        </div>
+
+        <!-- Warning Box -->
+        <div class="warning-box">
+            <h6 class="mb-2"><i class="fas fa-exclamation-triangle warning-icon"></i> <strong>Warning: This action will:</strong></h6>
+            <ul class="consequences-list">
+                <li>Permanently delete this SMS task from the system</li>
+                <li>Remove any associated periodic scheduling{% if object.periodic_task %} (currently has {{ object.schedule_info }}){% endif %}</li>
+                <li>Delete all execution history and statistics</li>
+                {% if object.status == 'running' %}
+                <li><strong>Stop the currently running task execution</strong></li>
+                {% endif %}
+                {% if object.is_active %}
+                <li>Deactivate any currently active hooks or integrations</li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <form id="deleteForm" method="post" action="{% url 'sms_tasks:delete_task' object.pk %}" novalidate>
+                {% csrf_token %}
+                <button id="confirmDeleteBtn" type="submit" class="btn btn-danger-custom" aria-label="Confirm delete">
+                    <span class="loading-state" id="deleteLoading"><span class="spinner"></span>Deleting...</span>
+                    <span id="deleteLabel"><i class="fas fa-trash me-1"></i> Delete Task</span>
+                </button>
+            </form>
+
+            <a href="{% url 'sms_tasks:dashboard' %}" class="btn btn-secondary-custom" id="cancelBtn"><i class="fas fa-arrow-left me-1"></i> Back</a>
+
+            <button id="copyBtn" class="btn btn-outline-secondary" title="Copy task details"><i class="fas fa-copy"></i> Copy</button>
+        </div>
+
+        <p class="text-center muted-small mt-3">Tip: Press <strong>D</strong> to delete, <strong>Esc</strong> to cancel.</p>
+
+    </div>
+
+    <!-- Phone List Modal -->
+    <div class="modal fade" id="phonesModal" tabindex="-1" aria-labelledby="phonesModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="phonesModalLabel">Phone Numbers ({{ object.get_phone_list|length }})</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <pre id="phonesPre" style="white-space:pre-wrap;word-break:break-word;">{% for p in object.get_phone_list %}{{ p }}
+{% endfor %}</pre>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button id="copyPhonesBtn" type="button" class="btn btn-primary">Copy all</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Undo Toast -->
+    <div id="undoToast" class="toast align-items-center text-bg-dark border-0" role="status" aria-live="polite" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body">Task deleted. <button id="undoBtn" class="btn btn-sm btn-light ms-2">Undo</button></div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    </div>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Helper: CSRF token from cookie (Django default)
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+
+        // UI elements
+        const deleteForm = document.getElementById('deleteForm');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        const deleteLoading = document.getElementById('deleteLoading');
+        const deleteLabel = document.getElementById('deleteLabel');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const viewPhonesBtn = document.getElementById('viewPhonesBtn');
+        const phonesModalEl = document.getElementById('phonesModal');
+        const phonesModal = new bootstrap.Modal(phonesModalEl);
+        const copyPhonesBtn = document.getElementById('copyPhonesBtn');
+
+        const undoToastEl = document.getElementById('undoToast');
+        const undoToast = new bootstrap.Toast(undoToastEl, { delay: 8000 });
+        const undoBtn = document.getElementById('undoBtn');
+
+        // Prevent default form submit and use fetch for better UX
+        deleteForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await handleDelete();
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'd' || e.key === 'D') {
+                e.preventDefault();
+                confirmDeleteBtn.focus();
+                handleDelete();
+            }
+            if (e.key === 'Escape') {
+                // mimic cancel
+                window.location.href = "{% url 'sms_tasks:dashboard' %}";
+            }
+        });
+
+        viewPhonesBtn.addEventListener('click', () => phonesModal.show());
+
+        copyPhonesBtn.addEventListener('click', async () => {
+            const phonesText = document.getElementById('phonesPre').innerText.trim();
+            try {
+                await navigator.clipboard.writeText(phonesText);
+                copyPhonesBtn.innerText = 'Copied';
+                setTimeout(()=>copyPhonesBtn.innerText = 'Copy all', 1500);
+            } catch (err) {
+                alert('Unable to copy: ' + err);
+            }
+        });
+
+        copyBtn.addEventListener('click', async () => {
+            const info = `Task: {{ object.name }}\nType: {{ object.get_send_type_display }}\nNumbers: {{ object.get_phone_list|length }}\nStatus: {{ object.get_status_display }}\nSchedule: {{ object.schedule_info }}`;
+            try {
+                await navigator.clipboard.writeText(info);
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied';
+                setTimeout(()=>copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy', 1500);
+            } catch (err) {
+                alert('Copy failed: ' + err);
+            }
+        });
+
+        async function handleDelete() {
+            // Visual loading state
+            confirmDeleteBtn.setAttribute('disabled', '');
+            deleteLoading.classList.add('show');
+            deleteLabel.style.display = 'none';
+
+            // Use fetch to send DELETE request to endpoint. The form action is the delete URL.
+            const actionUrl = deleteForm.getAttribute('action');
+            try {
+                const resp = await fetch(actionUrl, {
+                    method: 'POST', // Django DeleteView expects POST when using form + csrf
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (resp.ok) {
+                    // Show undo option via toast
+                    undoToast.show();
+                    // Optionally hide main content and show success state
+                    confirmDeleteBtn.classList.add('disabled');
+                    deleteLabel.innerHTML = '<i class="fas fa-check-circle me-1"></i> Deleted';
+                    deleteLabel.style.display = 'inline-flex';
+
+                    // After small delay navigate to list (but allow undo)
+                    setTimeout(() => {
+                        // If toast still visible, keep on page so user can undo; otherwise navigate
+                        // We'll check if toast is hidden by user: bootstrap doesn't expose visible; we track via a flag
+                        if (!undoToastEl.classList.contains('show')) {
+                            window.location.href = "{% url 'sms_tasks:dashboard' %}";
+                        }
+                    }, 2000);
+
+                } else {
+                    // Try to parse JSON error
+                    let text = await resp.text();
+                    console.error('Delete failed', resp.status, text);
+                    alert('Could not delete task. Server returned: ' + resp.status);
+                    resetButtonState();
+                }
+            } catch (err) {
+                console.error('Network error while deleting', err);
+                alert('Network error: ' + err.message);
+                resetButtonState();
+            }
+        }
+
+        function resetButtonState() {
+            confirmDeleteBtn.removeAttribute('disabled');
+            deleteLoading.classList.remove('show');
+            deleteLabel.style.display = 'inline-flex';
+        }
+
+        {% comment %} // Undo handler: tries to call a restore endpoint (if available). If your backend does hard delete,
+        // replace this logic with whatever rollback makes sense (or remove undo).
+        undoBtn.addEventListener('click', async () => {
+            undoBtn.setAttribute('disabled', '');
+            try {
+                const restoreUrl = "{% url 'sms_tasks:dashboard'  %}"; // create this view if you want undo
+                const r = await fetch(restoreUrl, {
+                    method: 'POST', headers: {'X-sms_tasks:dashboard': csrftoken, 'Accept': 'application/json'}
+                });
+                if (r.ok) {
+                    undoToast.hide();
+                    alert('Task restored successfully.');
+                    window.location.href = "{% url 'sms_tasks:dashboard' %}";
+                } else {
+                    alert('Could not restore task (server responded ' + r.status + ').');
+                }
+            } catch (err) {
+                console.error('Restore failed', err);
+                alert('Restore failed: ' + err.message);
+            } finally {
+                undoBtn.removeAttribute('disabled');
+            }
+        }); {% endcomment %}
+
+        // Accessibility focus
+        window.addEventListener('load', () => {
+            confirmDeleteBtn.focus();
+        });
+
+        // Keep the toast element visible when shown; we also remove auto-redirect in favor of user action.
+        undoToastEl.addEventListener('hidden.bs.toast', () => {
+            // After undo toast is hidden (time ran out / user dismissed), redirect to list
+            window.location.href = "{% url 'sms_tasks:dashboard' %}";
+        });
+
+    </script>
+</body>
+</html>

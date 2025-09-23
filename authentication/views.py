@@ -14,7 +14,7 @@ from django.contrib.auth import logout
 from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
 from django.contrib.sites.shortcuts import get_current_site
 from tasks.email_service import EmailService
-from tasks.send_sms import send_sms
+from sms_tasks.tasks import send_sms
 from django.conf import settings
 
 from permission.login import LoginAdmin, LoginAuth

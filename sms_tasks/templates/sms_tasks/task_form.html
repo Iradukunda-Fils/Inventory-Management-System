@@ -1,0 +1,587 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if object %}Edit{% else %}Create{% endif %} SMS Task</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .form-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            margin: 20px auto;
+            max-width: 800px;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .form-section {
+            background: #f8fafc;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .form-section h5 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 12px 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+        }
+
+        .schedule-section {
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        .schedule-section.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .radio-option {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .radio-option input[type="radio"] {
+            display: none;
+        }
+
+        .radio-option label {
+            display: block;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            background: white;
+        }
+
+        .radio-option input[type="radio"]:checked + label {
+            border-color: var(--primary-color);
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .radio-option label:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .char-counter {
+            font-size: 0.85rem;
+            color: #6b7280;
+            text-align: right;
+            margin-top: 5px;
+        }
+
+        .char-counter.warning { color: var(--warning-color); }
+        .char-counter.danger { color: var(--danger-color); }
+
+        .phone-validator {
+            margin-top: 10px;
+        }
+
+        .phone-validator .valid {
+            color: var(--success-color);
+        }
+
+        .phone-validator .invalid {
+            color: var(--danger-color);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #8b5cf6 100%);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .error-messages {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .help-text {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <!-- Header -->
+            <div class="form-header">
+                <h1 class="h2 mb-0">
+                    <i class="fas fa-{% if object %}edit{% else %}plus{% endif %} me-2"></i>
+                    {% if object %}Edit SMS Task{% else %}Create New SMS Task{% endif %}
+                </h1>
+                <p class="text-muted mb-0">Configure your SMS task with scheduling options</p>
+            </div>
+
+            <!-- Error Messages -->
+            {% if form.errors %}
+            <div class="error-messages">
+                <h6><i class="fas fa-exclamation-triangle me-2"></i>Please correct the following errors:</h6>
+                <ul class="mb-0">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>{{ field|title }}: {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- Form -->
+            <form method="post" id="taskForm" novalidate>
+                {% csrf_token %}
+                {{ form.created_by }}
+
+                <!-- Basic Information Section -->
+                <div class="form-section">
+                    <h5><i class="fas fa-info-circle me-2"></i>Basic Information</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">Task Name *</label>
+                            {{ form.name }}
+                            <div class="help-text">{{ form.name.help_text }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.sender.id_for_label }}" class="form-label">Sender</label>
+                            {{ form.sender }}
+                            <div class="help-text">{{ form.sender.help_text }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.send_type.id_for_label }}" class="form-label">Send Type *</label>
+                            {{ form.send_type }}
+                            <div class="help-text">{{ form.send_type.help_text }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.retry_count.id_for_label }}" class="form-label">Retry Count</label>
+                            {{ form.retry_count }}
+                            <div class="help-text">{{ form.retry_count.help_text }}</div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="form-check">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    Task is active (can be executed)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phone Numbers Section -->
+                <div class="form-section">
+                    <h5><i class="fas fa-phone me-2"></i>Phone Numbers</h5>
+                    <label for="{{ form.phone_numbers.id_for_label }}" class="form-label">Phone Numbers *</label>
+                    {{ form.phone_numbers }}
+                    <div class="help-text">{{ form.phone_numbers.help_text }}</div>
+                    <div class="phone-validator" id="phoneValidator"></div>
+                </div>
+
+                <!-- Message Section -->
+                <div class="form-section">
+                    <h5><i class="fas fa-comment me-2"></i>Message Content</h5>
+                    <label for="{{ form.message.id_for_label }}" class="form-label">Message *</label>
+                    {{ form.message }}
+                    <div class="char-counter" id="charCounter">
+                        <span id="charCount">0</span> / 1000 characters
+                    </div>
+                    <div class="help-text">{{ form.message.help_text }}</div>
+                </div>
+
+                <!-- Schedule Section -->
+                <div class="form-section">
+                    <h5><i class="fas fa-clock me-2"></i>Schedule Options</h5>
+                    <label class="form-label">When to send this SMS? *</label>
+                    <div class="radio-group">
+                        {% for value, label in form.schedule_type.field.choices %}
+                        <div class="radio-option">
+                            <input type="radio" name="schedule_type" value="{{ value }}" id="schedule_{{ value }}"
+                                   {% if form.schedule_type.value == value %}checked{% endif %}>
+                            <label for="schedule_{{ value }}">
+                                <i class="fas fa-{% if value == 'immediate' %}bolt{% elif value == 'interval' %}repeat{% else %}calendar-alt{% endif %} me-2"></i>
+                                {{ label }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Interval Schedule -->
+                    <div class="schedule-section mt-4" id="intervalSchedule">
+                        <h6>Interval Schedule Settings</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="{{ form.interval_every.id_for_label }}" class="form-label">Repeat Every</label>
+                                {{ form.interval_every }}
+                                <div class="help-text">{{ form.interval_every.help_text }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.interval_period.id_for_label }}" class="form-label">Period</label>
+                                {{ form.interval_period }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Crontab Schedule -->
+                    <div class="schedule-section mt-4" id="crontabSchedule">
+                        <h6>Custom Cron Schedule</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="{{ form.cron_minute.id_for_label }}" class="form-label">Minute</label>
+                                {{ form.cron_minute }}
+                                <div class="help-text">{{ form.cron_minute.help_text }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.cron_hour.id_for_label }}" class="form-label">Hour</label>
+                                {{ form.cron_hour }}
+                                <div class="help-text">{{ form.cron_hour.help_text }}</div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <label for="{{ form.cron_day_of_week.id_for_label }}" class="form-label">Day of Week</label>
+                                {{ form.cron_day_of_week }}
+                                <div class="help-text">{{ form.cron_day_of_week.help_text }}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.cron_day_of_month.id_for_label }}" class="form-label">Day of Month</label>
+                                {{ form.cron_day_of_month }}
+                                <div class="help-text">{{ form.cron_day_of_month.help_text }}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.cron_month_of_year.id_for_label }}" class="form-label">Month</label>
+                                {{ form.cron_month_of_year }}
+                                <div class="help-text">{{ form.cron_month_of_year.help_text }}</div>
+                            </div>
+                        </div>
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Cron Examples:</strong><br>
+                            • Run every day at 9:00 AM: Minute=0, Hour=9<br>
+                            • Run every Monday at 2:30 PM: Minute=30, Hour=14, Day of Week=1<br>
+                            • Run every 5 minutes: Minute=*/5<br>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-save me-2"></i>
+                        {% if object %}Update Task{% else %}Create Task{% endif %}
+                    </button>
+                    <a href="{% url 'sms_tasks:dashboard' %}" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>  
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Form validation and dynamic behavior
+        class SMSTaskForm {
+            constructor() {
+                this.form = document.getElementById('taskForm');
+                this.scheduleTypeInputs = document.querySelectorAll('input[name="schedule_type"]');
+                this.phoneNumbersInput = document.getElementById('{{ form.phone_numbers.id_for_label }}');
+                this.messageInput = document.getElementById('{{ form.message.id_for_label }}');
+                this.sendTypeSelect = document.getElementById('{{ form.send_type.id_for_label }}');
+                
+                this.init();
+            }
+
+            init() {
+                this.setupScheduleToggle();
+                this.setupPhoneValidation();
+                this.setupMessageCounter();
+                this.setupFormValidation();
+                this.setupSendTypeChange();
+                
+                // Set initial state
+                this.toggleScheduleSections();
+                this.validatePhones();
+                this.updateCharCount();
+            }
+
+            setupScheduleToggle() {
+                this.scheduleTypeInputs.forEach(input => {
+                    input.addEventListener('change', () => {
+                        this.toggleScheduleSections();
+                    });
+                });
+            }
+
+            toggleScheduleSections() {
+                const selectedType = document.querySelector('input[name="schedule_type"]:checked').value;
+                
+                // Hide all schedule sections
+                document.getElementById('intervalSchedule').classList.remove('show');
+                document.getElementById('crontabSchedule').classList.remove('show');
+                
+                // Show relevant section
+                if (selectedType === 'interval') {
+                    document.getElementById('intervalSchedule').classList.add('show');
+                } else if (selectedType === 'crontab') {
+                    document.getElementById('crontabSchedule').classList.add('show');
+                }
+            }
+
+            setupPhoneValidation() {
+                this.phoneNumbersInput.addEventListener('input', () => {
+                    this.validatePhones();
+                });
+
+                this.phoneNumbersInput.addEventListener('blur', () => {
+                    this.validatePhones();
+                });
+            }
+
+            validatePhones() {
+                const phoneNumbers = this.phoneNumbersInput.value.trim();
+                const validator = document.getElementById('phoneValidator');
+                
+                if (!phoneNumbers) {
+                    validator.innerHTML = '';
+                    return true;
+                }
+
+                const phones = phoneNumbers.split(',').map(p => p.trim()).filter(p => p);
+                const phoneRegex = /^\+?1?\d{9,15}$/;
+                
+                let validCount = 0;
+                let invalidPhones = [];
+
+                phones.forEach(phone => {
+                    if (phoneRegex.test(phone)) {
+                        validCount++;
+                    } else {
+                        invalidPhones.push(phone);
+                    }
+                });
+
+                let html = `<div class="mt-2">`;
+                if (validCount > 0) {
+                    html += `<div class="valid"><i class="fas fa-check-circle me-1"></i>${validCount} valid phone number(s)</div>`;
+                }
+                
+                if (invalidPhones.length > 0) {
+                    html += `<div class="invalid"><i class="fas fa-times-circle me-1"></i>Invalid: ${invalidPhones.join(', ')}</div>`;
+                }
+                html += `</div>`;
+
+                validator.innerHTML = html;
+                return invalidPhones.length === 0;
+            }
+
+            setupMessageCounter() {
+                this.messageInput.addEventListener('input', () => {
+                    this.updateCharCount();
+                });
+            }
+
+            updateCharCount() {
+                const length = this.messageInput.value.length;
+                const counter = document.getElementById('charCounter');
+                const charCount = document.getElementById('charCount');
+                
+                charCount.textContent = length;
+                
+                // Update counter styling based on length
+                counter.classList.remove('warning', 'danger');
+                if (length > 800) {
+                    counter.classList.add('danger');
+                } else if (length > 600) {
+                    counter.classList.add('warning');
+                }
+            }
+
+            setupSendTypeChange() {
+                this.sendTypeSelect.addEventListener('change', () => {
+                    const sendType = this.sendTypeSelect.value;
+                    const phoneHelp = this.phoneNumbersInput.parentElement.querySelector('.help-text');
+                    
+                    if (sendType === 'single') {
+                        phoneHelp.textContent = 'Enter a single phone number for individual SMS.';
+                        this.phoneNumbersInput.placeholder = '+1234567890';
+                    } else if (sendType === 'bulk') {
+                        phoneHelp.textContent = 'Enter multiple phone numbers separated by commas for bulk SMS.';
+                        this.phoneNumbersInput.placeholder = '+1234567890, +0987654321, +1122334455';
+                    } else {
+                        phoneHelp.textContent = 'Enter phone number(s) for immediate SMS sending.';
+                        this.phoneNumbersInput.placeholder = '+1234567890';
+                    }
+                });
+            }
+
+            setupFormValidation() {
+                this.form.addEventListener('submit', (e) => {
+                    if (!this.validateForm()) {
+                        e.preventDefault();
+                        this.showValidationErrors();
+                    }
+                });
+            }
+
+            validateForm() {
+                const errors = [];
+                
+                // Validate required fields
+                const name = document.getElementById('{{ form.name.id_for_label }}').value.trim();
+                if (!name) {
+                    errors.push('Task name is required');
+                }
+
+                // Validate phone numbers
+                if (!this.validatePhones()) {
+                    errors.push('Please fix invalid phone numbers');
+                }
+
+                // Validate message
+                const message = this.messageInput.value.trim();
+                if (!message) {
+                    errors.push('Message content is required');
+                }
+
+                // Validate schedule-specific fields
+                const scheduleType = document.querySelector('input[name="schedule_type"]:checked').value;
+                if (scheduleType === 'interval') {
+                    const intervalEvery = document.getElementById('{{ form.interval_every.id_for_label }}').value;
+                    if (!intervalEvery || intervalEvery < 1) {
+                        errors.push('Interval "every" value must be at least 1');
+                    }
+                }
+
+                this.formErrors = errors;
+                return errors.length === 0;
+            }
+
+            showValidationErrors() {
+                // Remove existing error display
+                const existingErrors = document.querySelector('.client-side-errors');
+                if (existingErrors) {
+                    existingErrors.remove();
+                }
+
+                if (this.formErrors.length > 0) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error-messages client-side-errors';
+                    errorDiv.innerHTML = `
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>Please fix the following errors:</h6>
+                        <ul class="mb-0">
+                            ${this.formErrors.map(error => `<li>${error}</li>`).join('')}
+                        </ul>
+                    `;
+                    
+                    this.form.insertBefore(errorDiv, this.form.firstChild);
+                    
+                    // Scroll to errors
+                    errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+
+            // Public method to validate before submit
+            isValid() {
+                return this.validateForm();
+            }
+        }
+
+        // Initialize form when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            const smsForm = new SMSTaskForm();
+            
+            // Add smooth transitions to schedule sections
+            const scheduleSections = document.querySelectorAll('.schedule-section');
+            scheduleSections.forEach(section => {
+                section.style.transition = 'all 0.3s ease';
+            });
+
+            // Add form submission loading state
+            document.getElementById('taskForm').addEventListener('submit', function() {
+                const submitBtn = this.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+                submitBtn.disabled = true;
+            });
+        });
+    </script>
+</body>
+</html>

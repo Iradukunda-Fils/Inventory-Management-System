@@ -55,7 +55,7 @@ USER appuser
 # ----------------------------
 # Start Celery Beat  
 # ----------------------------
-CMD ["celery", "-A", "Inventory_MS", "beat", "--loglevel=info", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler"]
+CMD ["celery", "-A", "Inventory_MS", "beat", "--loglevel=debug"]
 
 
 # Healthcheck: ensure the beat process is alive

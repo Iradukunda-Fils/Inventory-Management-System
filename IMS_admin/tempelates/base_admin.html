@@ -23,12 +23,6 @@
 </head>
 
 <body class="dashboard-body">
-    <!-- Loading Spinner -->
-    <div class="spinner-overlay" id="spinner">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-    </div>
     <!-- Sidebar Toggle Button -->
     <button id="sidebarToggle" class="sidebar-toggle">
         <i class="fas fa-bars"></i>
@@ -36,67 +30,101 @@
 
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
+        <!-- Sidebar Header -->
         <div class="sidebar-header">
             <div class="company">
-                <img src="{% static 'img/logo.png' %}" alt="Ella Company" class="company-logo">
+                <img src="{% static 'img/logo.png' %}" alt="IMS Company Logo" class="company-logo">
                 <div class="company-info">
-                    <h2 class="company-name" style="color: whitesmoke;">IMS Company</h2>
-                    <br>
-                    <p class="company-type" style="color: rgb(215, 232, 247);">{{ user.username }}</p>
+                    <h2 class="company-name">IMS Company</h2>
+                    <p class="user-name">{{ user.username }}</p>
                 </div>
             </div>
         </div>
 
+        <!-- Sidebar Navigation -->
         <nav class="sidebar-nav">
             <ul class="sidebar-menu">
+                <!-- Dashboard -->
                 <li class="{% if request.resolver_match.url_name == 'admin-dashboard' %}active{% endif %}">
                     <a href="{% url 'admin-dashboard' %}">
                         <i class="fas fa-gauge-high"></i>
                         <span>Admin Dashboard</span>
                     </a>
                 </li>
+
+                <!-- Users -->
                 <li class="{% if request.resolver_match.url_name == 'list-users' %}active{% endif %}">
                     <a href="{% url 'list-users' %}">
                         <i class="fas fa-users-gear"></i>
                         <span>Users</span>
                     </a>
                 </li>
+
+                <!-- Product Categories -->
                 <li class="{% if request.resolver_match.url_name == 'admin-category' %}active{% endif %}">
                     <a href="{% url 'admin-category' %}">
                         <i class="fas fa-tags"></i>
                         <span>Product Categories</span>
                     </a>
                 </li>
+
+                <!-- Products -->
                 <li class="{% if request.resolver_match.url_name == 'admin-product' %}active{% endif %}">
                     <a href="{% url 'admin-product' %}">
                         <i class="fas fa-box"></i>
                         <span>Products</span>
                     </a>
                 </li>
+
+                <!-- Stock Movement -->
                 <li class="{% if request.resolver_match.url_name == 'admin-stock-movement' %}active{% endif %}">
                     <a href="{% url 'admin-stock-movement' %}">
                         <i class="fas fa-warehouse"></i>
                         <span>Stock Movement</span>
                     </a>
                 </li>
+
+                <!-- Sales -->
                 <li class="{% if request.resolver_match.url_name == 'admin-sales' %}active{% endif %}">
                     <a href="{% url 'admin-sales' %}">
                         <i class="fas fa-shopping-cart"></i>
                         <span>Sales</span>
                     </a>
                 </li>
+
+                <!-- Analytics -->
                 <li class="{% if request.resolver_match.url_name == 'analytics' %}active{% endif %}">
                     <a href="{% url 'analytics' %}">
                         <i class="fas fa-chart-line"></i>
                         <span>Analytics</span>
                     </a>
                 </li>
+
+                <!-- Sales Summary -->
                 <li class="{% if request.resolver_match.url_name == 'admin-sales-summary' %}active{% endif %}">
                     <a href="{% url 'admin-sales-summary' %}">
                         <i class="fas fa-file-invoice-dollar"></i>
                         <span>Sales Summary</span>
                     </a>
                 </li>
+
+                <!-- SMS Management -->
+                <li class="{% if request.resolver_match.url_name == 'send_sms' %}active{% endif %}">
+                    <a href="{% url 'send_sms' %}">
+                        <i class="fas fa-sms"></i>
+                        <span>SMS Management</span>
+                    </a>
+                </li>
+
+                <!-- Task Manager -->
+                <li class="{% if request.resolver_match.url_name == 'sms_tasks:dashboard' %}active{% endif %}">
+                    <a href="{% url 'sms_tasks:dashboard' %}">
+                        <i class="fas fa-tasks"></i>
+                        <span>Task Manager</span>
+                    </a>
+                </li>
+
+                <!-- Logout -->
                 <li class="logout-item">
                     <a href="{% url 'admin-logout' %}">
                         <i class="fas fa-sign-out-alt"></i>
@@ -106,6 +134,8 @@
             </ul>
         </nav>
     </aside>
+
+
 
     <!-- Main Content -->
     <main class="main-content" id="mainContent">

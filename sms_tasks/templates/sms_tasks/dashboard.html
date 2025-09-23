@@ -1,0 +1,745 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS Task Management Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --dark-color: #1f2937;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .dashboard-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+            padding: 30px;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #8b5cf6 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .stats-card.success { background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%); }
+        .stats-card.warning { background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%); }
+        .stats-card.danger { background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%); }
+
+        .task-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        .table th {
+            background: var(--dark-color);
+            color: white;
+            border: none;
+            padding: 15px;
+        }
+
+        .table td {
+            padding: 15px;
+            vertical-align: middle;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-running { background: #dbeafe; color: #1e40af; }
+        .status-success { background: #d1fae5; color: #065f46; }
+        .status-failed { background: #fee2e2; color: #991b1b; }
+        .status-disabled { background: #f3f4f6; color: #6b7280; }
+
+        .action-btn {
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 2px;
+            font-size: 0.85rem;
+        }
+
+        .action-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); }
+        .btn-toggle { background: var(--warning-color); color: white; }
+        .btn-run { background: var(--success-color); color: white; }
+        .btn-edit { background: var(--primary-color); color: white; }
+        .btn-delete { background: var(--danger-color); color: white; }
+
+        .filter-section {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            color: white;
+            z-index: 9999;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show { transform: translateX(0); }
+        .toast.success { background: var(--success-color); }
+        .toast.error { background: var(--danger-color); }
+        .toast.info { background: var(--primary-color); }
+
+        .bulk-actions {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .bulk-actions.show { display: block; }
+
+        .checkbox-column { width: 50px; text-align: center; }
+        .actions-column { width: 200px; }
+        
+        .message-preview {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .schedule-info {
+            font-size: 0.85rem;
+            color: #6b7280;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="dashboard-container">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2 mb-0"><i class="fas fa-sms me-2"></i>SMS Task Management</h1>
+                <a href="{% url 'sms_tasks:create_task' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus me-2"></i>Create New Task
+                </a>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 class="mb-0">{{ total_tasks }}</h3>
+                                <p class="mb-0">Total Tasks</p>
+                            </div>
+                            <i class="fas fa-tasks fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card success">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 class="mb-0">{{ active_tasks }}</h3>
+                                <p class="mb-0">Active Tasks</p>
+                            </div>
+                            <i class="fas fa-play-circle fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card warning">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 class="mb-0">{{ pending_tasks }}</h3>
+                                <p class="mb-0">Pending Tasks</p>
+                            </div>
+                            <i class="fas fa-clock fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card danger">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 class="mb-0" id="failedTasksCount">0</h3>
+                                <p class="mb-0">Failed Tasks</p>
+                            </div>
+                            <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="filter-section">
+                <form method="get" class="row g-3" id="filterForm">
+                    <div class="col-md-4">
+                        {{ filter_form.search }}
+                    </div>
+                    <div class="col-md-2">
+                        {{ filter_form.status }}
+                    </div>
+                    <div class="col-md-2">
+                        {{ filter_form.send_type }}
+                    </div>
+                    <div class="col-md-2">
+                        {{ filter_form.is_active }}
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-1"></i>Filter
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Bulk Actions -->
+            <div class="bulk-actions" id="bulkActions">
+                <form method="post" action="{% url 'sms_tasks:bulk_actions' %}" id="bulkForm">
+                    {% csrf_token %}
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label">Bulk Actions:</label>
+                            <select name="action" class="form-control" required>
+                                <option value="">Select Action</option>
+                                <option value="activate">Activate Selected</option>
+                                <option value="deactivate">Deactivate Selected</option>
+                                <option value="run_now">Run Selected Now</option>
+                                <option value="delete">Delete Selected</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-bolt me-1"></i>Execute Action
+                            </button>
+                            <button type="button" class="btn btn-secondary ms-2" onclick="clearBulkSelection()">
+                                Clear Selection
+                            </button>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <span class="text-muted">Selected: <strong id="selectedCount">0</strong> tasks</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tasks Table -->
+            <div class="task-table">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="checkbox-column">
+                                <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)">
+                            </th>
+                            <th><a href="?sort=name" class="text-white text-decoration-none">Name</a></th>
+                            <th>Phone Numbers</th>
+                            <th>Message</th>
+                            <th>Type</th>
+                            <th>Schedule</th>
+                            <th><a href="?sort=status" class="text-white text-decoration-none">Status</a></th>
+                            <th>Stats</th>
+                            <th><a href="?sort=last_execution" class="text-white text-decoration-none">Last Run</a></th>
+                            <th class="actions-column">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tasksTableBody">
+                        {% for task in tasks %}
+                        <tr data-task-id="{{ task.id }}">
+                            <td class="checkbox-column">
+                                <input type="checkbox" name="selected_tasks" value="{{ task.id }}" 
+                                       class="task-checkbox" onchange="updateBulkActions()">
+                            </td>
+                            <td>
+                                <strong>{{ task.name }}</strong>
+                                <br><small class="text-muted">by {{ task.created_by.username }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ task.get_phone_list|length }} number{{ task.get_phone_list|length|pluralize }}</span>
+                                <br><small class="text-muted">{{ task.get_phone_list.0|default:"N/A" }}</small>
+                            </td>
+                            <td>
+                                <div class="message-preview">{{ task.get_message_preview }}</div>
+                                <small class="text-muted">{{ task.message|length }} chars</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ task.get_send_type_display }}</span>
+                            </td>
+                            <td>
+                                <div class="schedule-info">{{ task.schedule_info }}</div>
+                            </td>
+                            <td>
+                                <span class="status-badge status-{{ task.status }}" id="status-{{ task.id }}">
+                                    {{ task.get_status_display }}
+                                </span>
+                                {% if not task.is_active %}
+                                <br><small class="text-muted">(Inactive)</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>
+                                    <div>Runs: <strong id="exec-count-{{ task.id }}">{{ task.execution_count }}</strong></div>
+                                    <div>Success: <strong class="text-success" id="success-count-{{ task.id }}">{{ task.success_count }}</strong></div>
+                                    <div>Failed: <strong class="text-danger" id="failed-count-{{ task.id }}">{{ task.failed_count }}</strong></div>
+                                </small>
+                            </td>
+                            <td>
+                                <div id="last-exec-{{ task.id }}">
+                                    {% if task.last_execution %}
+                                        <small>{{ task.last_execution|date:"M d, Y H:i" }}</small>
+                                    {% else %}
+                                        <small class="text-muted">Never</small>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="btn-group-vertical btn-group-sm">
+                                    <button class="action-btn btn-toggle" 
+                                            onclick="toggleTaskStatus({{ task.id }})"
+                                            id="toggle-btn-{{ task.id }}"
+                                            data-loading="false">
+                                        <i class="fas fa-{{ task.is_active|yesno:'pause,play' }} me-1"></i>
+                                        {{ task.is_active|yesno:"Pause,Activate" }}
+                                    </button>
+                                    <button class="action-btn btn-run" 
+                                            onclick="runTaskNow({{ task.id }})"
+                                            id="run-btn-{{ task.id }}"
+                                            data-loading="false">
+                                        <i class="fas fa-play me-1"></i>Run Now
+                                    </button>
+                                </div>
+                                <div class="btn-group-vertical btn-group-sm mt-1">
+                                    <a href="{% url 'sms_tasks:edit_task' task.id %}" class="action-btn btn-edit">
+                                        <i class="fas fa-edit me-1"></i>Edit
+                                    </a>
+                                    <a href="{% url 'sms_tasks:delete_task' task.id %}" class="action-btn btn-delete">
+                                        <i class="fas fa-trash me-1"></i>Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center py-4">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <br>No SMS tasks found. <a href="{% url 'sms_tasks:create_task' %}">Create your first task</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Previous</a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Next</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Global variables
+        const CSRF_TOKEN = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        let updateInterval;
+
+        // Toast notification system
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'info'}-circle me-2"></i>
+                ${message}
+                <button type="button" class="btn-close btn-close-white ms-2" onclick="this.parentElement.remove()"></button>
+            `;
+            
+            document.getElementById('toastContainer').appendChild(toast);
+            
+            // Show toast
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        // AJAX utility function
+        async function makeAjaxRequest(url, options = {}) {
+            const defaultOptions = {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': CSRF_TOKEN,
+                    'Content-Type': 'application/json',
+                },
+                ...options
+            };
+            
+            try {
+                const response = await fetch(url, defaultOptions);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'Request failed');
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('AJAX request failed:', error);
+                throw error;
+            }
+        }
+
+        // Toggle task status (activate/deactivate)
+        async function toggleTaskStatus(taskId) {
+            const toggleBtn = document.getElementById(`toggle-btn-${taskId}`);
+            const isLoading = toggleBtn.getAttribute('data-loading') === 'true';
+            
+            if (isLoading) return;
+            
+            setButtonLoading(toggleBtn, true);
+            
+            try {
+                const data = await makeAjaxRequest(`/sms/ajax/toggle/${taskId}/`);
+                
+                if (data.success) {
+                    // Update button text and icon
+                    const icon = toggleBtn.querySelector('i');
+                    const text = toggleBtn.childNodes[toggleBtn.childNodes.length - 1];
+                    
+                    if (data.is_active) {
+                        icon.className = 'fas fa-pause me-1';
+                        text.textContent = 'Pause';
+                        toggleBtn.classList.remove('btn-success');
+                        toggleBtn.classList.add('btn-warning');
+                    } else {
+                        icon.className = 'fas fa-play me-1';
+                        text.textContent = 'Activate';
+                        toggleBtn.classList.remove('btn-warning');
+                        toggleBtn.classList.add('btn-success');
+                    }
+                    
+                    showToast(data.message, 'success');
+                    
+                    // Update status in the status column
+                    updateTaskRowStatus(taskId);
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (error) {
+                showToast('Failed to toggle task status', 'error');
+            } finally {
+                setButtonLoading(toggleBtn, false);
+            }
+        }
+
+        // Run task immediately
+        async function runTaskNow(taskId) {
+            const runBtn = document.getElementById(`run-btn-${taskId}`);
+            const isLoading = runBtn.getAttribute('data-loading') === 'true';
+            
+            if (isLoading) return;
+            
+            setButtonLoading(runBtn, true);
+            
+            try {
+                const data = await makeAjaxRequest(`/sms/ajax/run/${taskId}/`);
+                
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    
+                    // Update status to running
+                    const statusBadge = document.getElementById(`status-${taskId}`);
+                    statusBadge.textContent = 'RUNNING';
+                    statusBadge.className = 'status-badge status-running';
+                    
+                    // Start polling for status updates
+                    startStatusPolling(taskId);
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (error) {
+                showToast('Failed to start task', 'error');
+            } finally {
+                setButtonLoading(runBtn, false);
+            }
+        }
+
+        // Update task status in real-time
+        async function updateTaskRowStatus(taskId) {
+            try {
+                const data = await makeAjaxRequest(`/sms/ajax/status/${taskId}/`, { method: 'GET' });
+                
+                // Update status badge
+                const statusBadge = document.getElementById(`status-${taskId}`);
+                statusBadge.textContent = data.status.toUpperCase();
+                statusBadge.className = `status-badge status-${data.status}`;
+                
+                // Update execution counts
+                document.getElementById(`exec-count-${taskId}`).textContent = data.execution_count;
+                document.getElementById(`success-count-${taskId}`).textContent = data.success_count;
+                document.getElementById(`failed-count-${taskId}`).textContent = data.failed_count;
+                
+                // Update last execution time
+                if (data.last_execution) {
+                    const lastExecElement = document.getElementById(`last-exec-${taskId}`);
+                    const date = new Date(data.last_execution);
+                    lastExecElement.innerHTML = `<small>${date.toLocaleDateString()} ${date.toLocaleTimeString()}</small>`;
+                }
+                
+            } catch (error) {
+                console.error('Failed to update task status:', error);
+            }
+        }
+
+        // Start polling for status updates
+        function startStatusPolling(taskId) {
+            const pollInterval = setInterval(async () => {
+                await updateTaskRowStatus(taskId);
+                
+                // Stop polling if task is no longer running
+                const statusBadge = document.getElementById(`status-${taskId}`);
+                if (!statusBadge.className.includes('status-running')) {
+                    clearInterval(pollInterval);
+                }
+            }, 3000); // Poll every 3 seconds
+            
+            // Auto-stop after 5 minutes
+            setTimeout(() => clearInterval(pollInterval), 300000);
+        }
+
+        // Button loading state
+        function setButtonLoading(button, isLoading) {
+            const icon = button.querySelector('i');
+            const spinner = button.querySelector('.loading-spinner');
+            
+            if (isLoading) {
+                button.setAttribute('data-loading', 'true');
+                button.disabled = true;
+                
+                if (!spinner) {
+                    const loadingSpinner = document.createElement('div');
+                    loadingSpinner.className = 'loading-spinner';
+                    button.insertBefore(loadingSpinner, button.firstChild);
+                }
+                
+                if (icon) icon.style.display = 'none';
+                button.querySelector('.loading-spinner').style.display = 'inline-block';
+            } else {
+                button.setAttribute('data-loading', 'false');
+                button.disabled = false;
+                
+                if (icon) icon.style.display = 'inline';
+                if (spinner) spinner.style.display = 'none';
+            }
+        }
+
+        // Bulk selection functionality
+        function toggleSelectAll(checkbox) {
+            const taskCheckboxes = document.querySelectorAll('.task-checkbox');
+            taskCheckboxes.forEach(cb => {
+                cb.checked = checkbox.checked;
+            });
+            updateBulkActions();
+        }
+
+        function updateBulkActions() {
+            const selectedCheckboxes = document.querySelectorAll('.task-checkbox:checked');
+            const bulkActions = document.getElementById('bulkActions');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            selectedCount.textContent = selectedCheckboxes.length;
+            
+            if (selectedCheckboxes.length > 0) {
+                bulkActions.classList.add('show');
+                
+                // Add selected task IDs to bulk form
+                const existingInputs = document.querySelectorAll('#bulkForm input[name="selected_tasks"]');
+                existingInputs.forEach(input => input.remove());
+                
+                selectedCheckboxes.forEach(checkbox => {
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'selected_tasks';
+                    hiddenInput.value = checkbox.value;
+                    document.getElementById('bulkForm').appendChild(hiddenInput);
+                });
+            } else {
+                bulkActions.classList.remove('show');
+            }
+        }
+
+        function clearBulkSelection() {
+            const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
+            allCheckboxes.forEach(cb => cb.checked = false);
+            updateBulkActions();
+        }
+
+        // Auto-refresh functionality
+        function startAutoRefresh() {
+            updateInterval = setInterval(() => {
+                // Update statistics
+                updateDashboardStats();
+                
+                // Update task statuses for running tasks
+                const runningTasks = document.querySelectorAll('.status-running');
+                runningTasks.forEach(badge => {
+                    const taskId = badge.id.replace('status-', '');
+                    updateTaskRowStatus(taskId);
+                });
+            }, 30000); // Refresh every 30 seconds
+        }
+
+        // Update dashboard statistics
+        async function updateDashboardStats() {
+            try {
+                const data = await makeAjaxRequest('/sms/ajax/analytics/', { method: 'GET' });
+                
+                // Update failed tasks count
+                const failedCount = data.status_distribution.find(item => item.status === 'failed');
+                document.getElementById('failedTasksCount').textContent = failedCount ? failedCount.count : 0;
+                
+            } catch (error) {
+                console.error('Failed to update dashboard stats:', error);
+            }
+        }
+
+        // Form validation
+        function validateBulkForm() {
+            const action = document.querySelector('#bulkForm select[name="action"]').value;
+            const selectedTasks = document.querySelectorAll('.task-checkbox:checked').length;
+            
+            if (!action) {
+                showToast('Please select an action', 'error');
+                return false;
+            }
+            
+            if (selectedTasks === 0) {
+                showToast('Please select at least one task', 'error');
+                return false;
+            }
+            
+            if (action === 'delete') {
+                return confirm(`Are you sure you want to delete ${selectedTasks} task(s)? This action cannot be undone.`);
+            }
+            
+            return true;
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Start auto-refresh
+            startAutoRefresh();
+            
+            // Add form validation
+            document.getElementById('bulkForm').addEventListener('submit', function(e) {
+                if (!validateBulkForm()) {
+                    e.preventDefault();
+                }
+            });
+            
+            // Auto-submit filter form on change
+            const filterInputs = document.querySelectorAll('#filterForm select, #filterForm input');
+            filterInputs.forEach(input => {
+                if (input.type !== 'submit') {
+                    input.addEventListener('change', function() {
+                        // Small delay to allow user to finish typing
+                        setTimeout(() => {
+                            document.getElementById('filterForm').submit();
+                        }, 500);
+                    });
+                }
+            });
+            
+            // Show success/error messages from Django
+            {% if messages %}
+                {% for message in messages %}
+                    showToast('{{ message }}', '{{ message.tags }}');
+                {% endfor %}
+            {% endif %}
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', function() {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+        });
+    </script>
+</body>
+</html>

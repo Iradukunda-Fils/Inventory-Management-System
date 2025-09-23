@@ -1,4 +1,5 @@
 from django.urls import path
+from .views import SendSMSView
 from .listviews import (AdminView,ProductView,
                     UsersView,CategoryView,
                     SalesSummaryView,SalesView,
@@ -19,6 +20,7 @@ urlpatterns = [
     path('sales/', SalesView.as_view(), name='admin-sales'),
     path('sales-summary/', SalesSummaryView.as_view(), name='admin-sales-summary'),
     path('logout/', LogoutView.as_view(), name='admin-logout'),
+    path("send-sms/", SendSMSView.as_view(), name="send_sms"),
 ]
 
 

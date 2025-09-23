@@ -1,0 +1,94 @@
+/* Container */
+.sms-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 2rem;
+}
+
+/* Card */
+.sms-card {
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    max-width: 700px;
+    width: 100%;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.sms-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Header */
+.sms-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+.sms-header i {
+    font-size: 3rem;
+    color: #007bff;
+    margin-bottom: 0.5rem;
+}
+.sms-header h2 {
+    font-size: 1.8rem;
+    margin: 0;
+    font-weight: bold;
+    color: #333;
+}
+.sms-header p {
+    color: #777;
+    font-size: 0.95rem;
+}
+
+/* Form Groups */
+.sms-form .form-group {
+    margin-bottom: 1.25rem;
+}
+.sms-form label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: block;
+    color: #444;
+}
+.sms-form input,
+.sms-form textarea,
+.sms-form select {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.sms-form input:focus,
+.sms-form textarea:focus,
+.sms-form select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+    outline: none;
+}
+
+/* Submit Button */
+.sms-submit {
+    background: #007bff;
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    border-radius: 12px;
+    padding: 0.8rem 2rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+.sms-submit:hover {
+    background: #0056b3;
+}
+
+/* Alerts */
+.alert {
+    border-radius: 12px;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    padding: 0.8rem 1rem;
+}
