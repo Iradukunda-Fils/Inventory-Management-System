@@ -29,7 +29,7 @@ services:
     env_file:
       - .env
     ports:
-      - "8080:8080"  # Exposed internally to Nginx
+      - "80:8080"  # Exposed internally to Nginx
     networks:
       - backend
     deploy:
