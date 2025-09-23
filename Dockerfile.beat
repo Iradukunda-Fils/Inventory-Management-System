@@ -55,7 +55,7 @@ USER appuser
 # ----------------------------
 # Start Celery Beat  
 # ----------------------------
-CMD ["celery", "-A", "Inventory_MS", "beat", "--loglevel=debug"]
+CMD ["celery", "-A", "Inventory_MS", "beat", "--loglevel=info"]
 
 
 # Healthcheck: ensure the beat process is alive
