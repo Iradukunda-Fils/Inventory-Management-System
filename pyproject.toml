@@ -20,6 +20,7 @@
         "gunicorn==23.0.0",
         "httpx>=0.28.1",
         "packaging==24.2",
+        "phonenumbers>=9.0.14",
         "pipenv==2024.4.0",
         "platformdirs==4.3.6",
         "psycopg>=3.2.10",

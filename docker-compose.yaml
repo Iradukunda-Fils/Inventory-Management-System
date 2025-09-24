@@ -12,7 +12,7 @@ volumes:
 
 services:
   # ------------------------
-  # Django Nginx + Gunicorn
+  # Django + Gunicorn + Nginx
   # ------------------------
   web:
     build:
@@ -29,10 +29,13 @@ services:
     env_file:
       - .env
     ports:
-      - "8080:8080"  # Exposed internally to Nginx
+      - "8080:8080"
     networks:
       - backend
       - frontend
+    mem_limit: 350m
+    mem_reservation: 200m
+    cpus: 0.6
 
   # ------------------------
   # Celery Worker
@@ -53,9 +56,13 @@ services:
       - .env
     networks:
       - backend
+    mem_limit: 200m
+    mem_reservation: 100m
+    cpus: 0.3
+    command: celery -A Inventory_MS worker --concurrency=1 -l info  
 
   # ------------------------
-  # Celery Beat 
+  # Celery Beat (Scheduler)
   # ------------------------
   celery_beat:
     build:
@@ -73,42 +80,58 @@ services:
       - .env
     networks:
       - backend
+    mem_limit: 100m
+    mem_reservation: 50m
+    cpus: 0.2
+    command: celery -A Inventory_MS beat -l info
 
   # ------------------------
   # PostgreSQL Database
   # ------------------------
   db:
-    image: postgres:17
+    image: postgres:17-alpine                   
     container_name: postgres
     restart: always
     env_file:
       - .env
+    environment:
+      # Ensures proper locale at init time
+      POSTGRES_INITDB_ARGS: "--locale=en_US.UTF-8"
+      # Always good to make encoding explicit
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
     expose:
       - "5432"
     networks:
       - backend
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    mem_limit: 200m          # Hard cap, avoids crashing host
+    mem_reservation: 100m    # Soft reservation, gives scheduler a hint
+    cpus: 0.3                # Restrict CPU slice (30% of 1 core)
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
+
 
   # ------------------------
   # Redis (Broker / Cache)
   # ------------------------
   redis:
-    image: redis:7.2.10-bookworm
+    image: redis:7.2.10-alpine
     container_name: redis
     restart: always
     expose:
       - "6379"
     networks:
       - backend
+    mem_limit: 100m
+    mem_reservation: 50m
+    cpus: 0.2
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
-

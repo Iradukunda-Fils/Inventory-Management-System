@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django_celery_beat.models import IntervalSchedule, CrontabSchedule
 from .models import SMSTask
 import re
+import phonenumbers
 
 class SMSTaskForm(forms.ModelForm):
     SCHEDULE_TYPE_CHOICES = [
@@ -87,14 +88,30 @@ class SMSTaskForm(forms.ModelForm):
         if not phone_numbers:
             raise ValidationError("At least one phone number is required.")
         
-        phone_pattern = re.compile(r'^\+?1?\d{9,15}$')
+        # Split by comma and strip spaces
         phones = [phone.strip() for phone in phone_numbers.split(',')]
         
-        invalid_phones = [phone for phone in phones if not phone_pattern.match(phone)]
+        invalid_phones = []
+        valid_phones = []
+
+        for phone in phones:
+            try:
+                # Parse the phone number; assume default region 'RW' for Rwanda
+                phone_obj = phonenumbers.parse(phone, "RW")
+                if phonenumbers.is_valid_number(phone_obj):
+                    # Format in international format for storage/consistency
+                    valid_phones.append(phonenumbers.format_number(phone_obj, phonenumbers.PhoneNumberFormat.E164))
+                else:
+                    invalid_phones.append(phone)
+            except phonenumbers.NumberParseException:
+                invalid_phones.append(phone)
+        
         if invalid_phones:
             raise ValidationError(f"Invalid phone numbers: {', '.join(invalid_phones)}")
         
-        return phone_numbers
+        # Return cleaned and standardized phone numbers as comma-separated string
+        return ', '.join(valid_phones)
+
 
     def clean_message(self):
         message = self.cleaned_data.get('message', '')

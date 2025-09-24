@@ -53,8 +53,10 @@ RUN mv ./nginx/nginx.conf /etc/nginx/conf.d/app.conf \
     && mv /app/supervisord.conf /etc/supervisor/conf.d/supervisord.conf \
     # collecting static
     && python3 manage.py collectstatic --noinput
-    
-# Working ports
+
+USER root
+
+    # Working ports
 EXPOSE 80 8000
 
 # ----------------------------

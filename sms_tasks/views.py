@@ -1,3 +1,4 @@
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
@@ -84,6 +85,7 @@ class SMSTaskCreateView(AdminRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.created_by = self.request.user
         response = super().form_valid(form)
+
         
         # Handle immediate sending
         if form.cleaned_data.get('schedule_type') == 'immediate':
@@ -94,6 +96,7 @@ class SMSTaskCreateView(AdminRequiredMixin, CreateView):
             f'SMS Task "{form.instance.name}" created successfully!'
         )
         return response
+
 
     def _send_immediate_sms(self, task_instance):
         """Send SMS immediately using Celery task"""
