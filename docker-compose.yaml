@@ -29,13 +29,10 @@ services:
     env_file:
       - .env
     ports:
-      - "8080:8080"
+      - "80:8080"
     networks:
       - backend
       - frontend
-    mem_limit: 350m
-    mem_reservation: 200m
-    cpus: 0.6
 
   # ------------------------
   # Celery Worker
@@ -56,9 +53,6 @@ services:
       - .env
     networks:
       - backend
-    mem_limit: 200m
-    mem_reservation: 100m
-    cpus: 0.3
     command: celery -A Inventory_MS worker --concurrency=1 -l info  
 
   # ------------------------
@@ -80,9 +74,6 @@ services:
       - .env
     networks:
       - backend
-    mem_limit: 100m
-    mem_reservation: 50m
-    cpus: 0.2
     command: celery -A Inventory_MS beat -l info
 
   # ------------------------
@@ -106,9 +97,6 @@ services:
       - backend
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    mem_limit: 200m          # Hard cap, avoids crashing host
-    mem_reservation: 100m    # Soft reservation, gives scheduler a hint
-    cpus: 0.3                # Restrict CPU slice (30% of 1 core)
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
@@ -127,9 +115,6 @@ services:
       - "6379"
     networks:
       - backend
-    mem_limit: 100m
-    mem_reservation: 50m
-    cpus: 0.2
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
