@@ -3,6 +3,7 @@
 # ============================================
 
 ARG IMAGE_VERSION=3.13.7-slim-bookworm
+
 FROM python:${IMAGE_VERSION} AS build
 
 # Install system deps
@@ -33,6 +34,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     nginx \
+    curl \
     supervisor \
     netcat-openbsd \
     && rm -rf /var/lib/apt/lists/* && \
@@ -54,8 +56,6 @@ RUN mv ./nginx/nginx.conf /etc/nginx/conf.d/app.conf \
     # collecting static
     && python3 manage.py collectstatic --noinput
 
-USER root
-
     # Working ports
 EXPOSE 80 8000
 
@@ -70,4 +70,5 @@ CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.con
 
 # Healthcheck: ensure Django responds at /health/ endpoint
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-    CMD curl -f http://localhost:8000/health/ || exit 1
+  CMD curl -f http://localhost:8000/health/ \
+      && curl -f http://localhost:80/ || exit 1

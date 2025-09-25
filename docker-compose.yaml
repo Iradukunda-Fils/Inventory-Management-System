@@ -15,10 +15,7 @@ services:
   # Django + Gunicorn + Nginx
   # ------------------------
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile.web
-    image: inventory_ms:latest
+    image: iradukunda84/inventory_ms:v1.0.0
     container_name: inventory_ms
     restart: always
     depends_on:
@@ -29,7 +26,7 @@ services:
     env_file:
       - .env
     ports:
-      - "80:8080"
+      - "8080:8080"
     networks:
       - backend
       - frontend
@@ -38,57 +35,41 @@ services:
   # Celery Worker
   # ------------------------
   celery_worker:
-    build:
-      context: .
-      dockerfile: Dockerfile.worker
-    image: celery_ms:latest
+    image: iradukunda84/ims_celery_worker:v1.0.0
     container_name: celery_worker
     restart: always
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    env_file:
-      - .env
+    command: celery -A Inventory_MS worker -l info
+    depends_on:                   
+      web:
+        condition: service_healthy       
     networks:
       - backend
-    command: celery -A Inventory_MS worker --concurrency=1 -l info  
 
   # ------------------------
   # Celery Beat (Scheduler)
   # ------------------------
   celery_beat:
-    build:
-      context: .
-      dockerfile: Dockerfile.beat
-    image: celery_ms:latest
+    image: iradukunda84/ims_celery_beat:v1.0.0
     container_name: celery_beat
     restart: always
+    command: celery -A Inventory_MS beat -l info
     depends_on:
-      db:
+      web:
         condition: service_healthy
-      redis:
-        condition: service_healthy
-    env_file:
-      - .env
     networks:
       - backend
-    command: celery -A Inventory_MS beat -l info
 
   # ------------------------
   # PostgreSQL Database
   # ------------------------
   db:
-    image: postgres:17-alpine                   
+    image: postgres:17-alpine
     container_name: postgres
     restart: always
     env_file:
       - .env
     environment:
-      # Ensures proper locale at init time
       POSTGRES_INITDB_ARGS: "--locale=en_US.UTF-8"
-      # Always good to make encoding explicit
       LANG: en_US.UTF-8
       LC_ALL: en_US.UTF-8
     expose:
@@ -102,7 +83,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
 
   # ------------------------
   # Redis (Broker / Cache)

@@ -29,12 +29,18 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', False)
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(', ')
+
+ALLOWED_HOSTS = [
+    host.strip().strip('"').strip("'")
+    for host in os.getenv('ALLOWED_HOSTS', '').split(',')
+    if host.strip()
+]
+
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8080",
     "https://staging.twara.rw",
-    "https://www.staging.twara.rw",
+    "https://www.staging.twara.rw"
 ]
 
 
