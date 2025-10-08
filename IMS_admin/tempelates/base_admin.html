@@ -109,10 +109,10 @@
                 </li>
 
                 <!-- SMS Management -->
-                <li class="{% if request.resolver_match.url_name == 'send_sms' %}active{% endif %}">
-                    <a href="{% url 'send_sms' %}">
+                <li class="{% if request.resolver_match.url_name == 'sms_tasks:whatsapp' %}active{% endif %}">
+                    <a href="{% url 'sms_tasks:whatsapp' %}">
                         <i class="fas fa-sms"></i>
-                        <span>SMS Management</span>
+                        <span>WhatsApp Messages</span>
                     </a>
                 </li>
 

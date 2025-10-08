@@ -745,8 +745,11 @@
                     <span class="status-dot connected"></span>
                     <span id="connectionStatus">Connected</span>
                 </div>
-                <button class="btn btn-primary" onclick="openScheduleModal()">
-                    ➕ Schedule Message
+                <button class="btn btn-primary" onclick="openScheduleModal()" style="width: 38%;height: 5vh">
+                    ➕ 
+                </button>
+                <button class="btn btn-secondary" style="width: 38%;height: 5vh"> 
+                    <a href="{% url 'admin-dashboard' %}"><i class="fas fa-arrow-left me-1"></i> Back </a>
                 </button>
             </div>
         </div>
