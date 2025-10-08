@@ -1,7 +1,6 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import Sale, SalesSummary
-from django.contrib import messages
 
 @receiver(post_save, sender=Sale, dispatch_uid='update_sales_summary')
 def update_sales_summary(sender, instance, created, **kwargs):

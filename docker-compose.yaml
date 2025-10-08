@@ -15,7 +15,10 @@ services:
   # Django + Gunicorn + Nginx
   # ------------------------
   web:
-    image: iradukunda84/inventory_ms:v1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    image: iradukunda84/inventory_ms:v1.0.1
     container_name: inventory_ms
     restart: always
     depends_on:
@@ -35,7 +38,10 @@ services:
   # Celery Worker
   # ------------------------
   celery_worker:
-    image: iradukunda84/ims_celery_worker:v1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    image: iradukunda84/ims_celery_worker:v1.0.1
     container_name: celery_worker
     restart: always
     command: celery -A Inventory_MS worker -l info
@@ -49,7 +55,10 @@ services:
   # Celery Beat (Scheduler)
   # ------------------------
   celery_beat:
-    image: iradukunda84/ims_celery_beat:v1.0.0
+    build:
+      context: .
+      dockerfile: Dockerfile.beat
+    image: iradukunda84/ims_celery_beat:v1.0.1
     container_name: celery_beat
     restart: always
     command: celery -A Inventory_MS beat -l info

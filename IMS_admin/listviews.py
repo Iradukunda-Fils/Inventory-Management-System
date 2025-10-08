@@ -9,7 +9,6 @@ from django.contrib import messages
 from django.views import View
 from django.db.models import Q
 from django.utils.dateparse import parse_date
-from datetime import date
 
 
 User = get_user_model()

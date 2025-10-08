@@ -6,4 +6,4 @@ class ImsProductionConfig(AppConfig):
     
     def ready(self):
         # Correctly import signals
-        import IMS_production.signals
+        pass

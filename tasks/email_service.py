@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Optional, Union
+from typing import Dict, Any, List, Union
 from django.core.mail import EmailMultiAlternatives
 from django.template import Context, Template
 from django.conf import settings
@@ -292,7 +292,7 @@ def send_email_celery_task(self, **kwargs):
         success = email_service.send_email(**kwargs)
         
         if success:
-            logger.info(f"Async email sent successfully")
+            logger.info("Async email sent successfully")
         
         return success
         

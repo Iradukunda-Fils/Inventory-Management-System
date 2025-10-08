@@ -26,7 +26,7 @@ class SendEmailTask:
         email.content_subtype = "html"
         try:
             email.send()
-        except Exception as e:
+        except Exception:
             raise self.retry(exc=exc, countdown=60)
         
     @shared_task(bind=True, max_retries=3)

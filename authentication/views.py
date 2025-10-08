@@ -7,15 +7,12 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.views import View
 from django.views.generic import DeleteView
-from django.contrib.auth.password_validation import validate_password, ValidationError
-from django.shortcuts import get_object_or_404
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth import logout
 from django.contrib.auth.mixins import UserPassesTestMixin, LoginRequiredMixin
 from django.contrib.sites.shortcuts import get_current_site
-from tasks.email_service import EmailService
 from sms_tasks.tasks import send_sms
-from django.conf import settings
 
 from permission.login import LoginAdmin, LoginAuth
 from .forms import UserUpdateForm

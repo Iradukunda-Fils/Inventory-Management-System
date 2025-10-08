@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Task Management Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #25D366;
+            --primary-dark: #128C7E;
+            --secondary: #075E54;
+            --accent: #34B7F1;
+            --danger: #DC2626;
+            --warning: #F59E0B;
+            --success: #10B981;
+            --info: #3B82F6;
+            --gray-50: #F9FAFB;
+            --gray-100: #F3F4F6;
+            --gray-200: #E5E7EB;
+            --gray-300: #D1D5DB;
+            --gray-400: #9CA3AF;
+            --gray-500: #6B7280;
+            --gray-600: #4B5563;
+            --gray-700: #374151;
+            --gray-800: #1F2937;
+            --gray-900: #111827;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--gray-900);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .logo {
+            width: 48px;
+            height: 48px;
+            background: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: var(--gray-50);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: var(--success);
+        }
+
+        .status-dot.disconnected {
+            background: var(--danger);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
+        }
+
+        .stat-card.pending::before { background: var(--warning); }
+        .stat-card.processing::before { background: var(--info); }
+        .stat-card.completed::before { background: var(--success); }
+        .stat-card.failed::before { background: var(--danger); }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            background: var(--gray-100);
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--gray-900);
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--gray-600);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-change {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .stat-change.positive {
+            color: var(--success);
+        }
+
+        .stat-change.negative {
+            color: var(--danger);
+        }
+
+        /* Main Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Card */
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--gray-300);
+            background: white;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            background: var(--gray-50);
+            border-color: var(--gray-400);
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Search */
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+        }
+
+        /* Task List */
+        .task-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .task-item {
+            padding: 16px;
+            border-bottom: 1px solid var(--gray-200);
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .task-item:hover {
+            background: var(--gray-50);
+        }
+
+        .task-item:last-child {
+            border-bottom: none;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .task-recipient {
+            font-weight: 600;
+            color: var(--gray-900);
+            font-size: 15px;
+        }
+
+        .task-status {
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .task-status.pending { background: #FEF3C7; color: #92400E; }
+        .task-status.queued { background: #DBEAFE; color: #1E40AF; }
+        .task-status.processing { background: #E0E7FF; color: #3730A3; }
+        .task-status.completed { background: #D1FAE5; color: #065F46; }
+        .task-status.failed { background: #FEE2E2; color: #991B1B; }
+        .task-status.retrying { background: #FED7AA; color: #9A3412; }
+        .task-status.cancelled { background: #F3F4F6; color: #374151; }
+
+        .task-message {
+            color: var(--gray-600);
+            font-size: 14px;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--gray-500);
+        }
+
+        .task-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-300);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-icon {
+            padding: 8px;
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: var(--gray-100);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--gray-200);
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--gray-700);
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* Activity Timeline */
+        .activity-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            position: relative;
+            padding-left: 32px;
+            padding-bottom: 20px;
+        }
+
+        .activity-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .activity-item::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 20px;
+            width: 2px;
+            height: calc(100% - 20px);
+            background: var(--gray-200);
+        }
+
+        .activity-item:last-child::before {
+            display: none;
+        }
+
+        .activity-icon {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px var(--gray-200);
+        }
+
+        .activity-icon.success { background: var(--success); }
+        .activity-icon.error { background: var(--danger); }
+        .activity-icon.warning { background: var(--warning); }
+
+        .activity-content {
+            font-size: 14px;
+            color: var(--gray-700);
+        }
+
+        .activity-time {
+            font-size: 12px;
+            color: var(--gray-500);
+            margin-top: 4px;
+        }
+
+        /* Charts */
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray-500);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--gray-200);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--gray-100);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-400);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-500);
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .badge-danger {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            padding: 20px 0;
+        }
+
+        .pagination button {
+            padding: 8px 12px;
+            border: 1px solid var(--gray-300);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: var(--gray-50);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination .page-info {
+            padding: 0 12px;
+            color: var(--gray-600);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title">
+                <div class="logo">💬</div>
+                <div>
+                    <h1>WhatsApp Task Manager</h1>
+                    <div style="font-size: 14px; color: var(--gray-600); margin-top: 4px;">
+                        Real-time messaging dashboard
+                    </div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="connection-status">
+                    <span class="status-dot connected"></span>
+                    <span id="connectionStatus">Connected</span>
+                </div>
+                <button class="btn btn-primary" onclick="openScheduleModal()">
+                    ➕ Schedule Message
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value" id="totalTasks">0</div>
+                        <div class="stat-label">Total Tasks</div>
+                    </div>
+                    <div class="stat-icon">📊</div>
+                </div>
+                <div class="stat-change positive">
+                    <span>↑ 12%</span> from last week
+                </div>
+            </div>
+
+            <div class="stat-card pending">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value" id="pendingTasks">0</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                    <div class="stat-icon">⏳</div>
+                </div>
+                <div class="stat-change" id="pendingChange">
+                    Waiting to be sent
+                </div>
+            </div>
+
+            <div class="stat-card processing">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value" id="processingTasks">0</div>
+                        <div class="stat-label">Processing</div>
+                    </div>
+                    <div class="stat-icon">⚡</div>
+                </div>
+                <div class="stat-change">
+                    Currently sending
+                </div>
+            </div>
+
+            <div class="stat-card completed">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value" id="completedTasks">0</div>
+                        <div class="stat-label">Completed</div>
+                    </div>
+                    <div class="stat-icon">✅</div>
+                </div>
+                <div class="stat-change positive">
+                    <span id="successRate">0%</span> success rate
+                </div>
+            </div>
+
+            <div class="stat-card failed">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value" id="failedTasks">0</div>
+                        <div class="stat-label">Failed</div>
+                    </div>
+                    <div class="stat-icon">❌</div>
+                </div>
+                <div class="stat-change negative">
+                    Need attention
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-value" id="avgExecutionTime">0ms</div>
+                        <div class="stat-label">Avg Time</div>
+                    </div>
+                    <div class="stat-icon">⏱️</div>
+                </div>
+                <div class="stat-change positive">
+                    <span>↓ 8%</span> faster
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Task List -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Message Tasks</h2>
+                    <button class="btn btn-secondary btn-icon" onclick="refreshTasks()">
+                        🔄
+                    </button>
+                </div>
+                <div class="card-body">
+                    <!-- Filters -->
+                    <div class="filters">
+                        <div class="filter-group">
+                            <button class="filter-btn active" data-status="all" onclick="filterTasks('all')">
+                                All
+                            </button>
+                            <button class="filter-btn" data-status="pending" onclick="filterTasks('pending')">
+                                Pending
+                            </button>
+                            <button class="filter-btn" data-status="processing" onclick="filterTasks('processing')">
+                                Processing
+                            </button>
+                            <button class="filter-btn" data-status="completed" onclick="filterTasks('completed')">
+                                Completed
+                            </button>
+                            <button class="filter-btn" data-status="failed" onclick="filterTasks('failed')">
+                                Failed
+                            </button>
+                        </div>
+                        <div class="search-box">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" placeholder="Search by recipient or message..." id="searchInput" oninput="searchTasks()">
+                        </div>
+                    </div>
+
+                    <!-- Task List -->
+                    <div class="task-list" id="taskList">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination">
+                        <button onclick="previousPage()" id="prevBtn">← Previous</button>
+                        <span class="page-info">
+                            Page <span id="currentPage">1</span> of <span id="totalPages">1</span>
+                        </span>
+                        <button onclick="nextPage()" id="nextBtn">Next →</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div>
+                <!-- Recent Activity -->
+                <div class="card" style="margin-bottom: 24px;">
+                    <div class="card-header">
+                        <h2 class="card-title">Recent Activity</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="activity-list" id="activityList">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Quick Actions</h2>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-primary" style="width: 100%; margin-bottom: 12px;" onclick="openScheduleModal()">
+                            📅 Schedule Message
+                        </button>
+                        <button class="btn btn-secondary" style="width: 100%; margin-bottom: 12px;" onclick="retryFailedTasks()">
+                            🔄 Retry Failed Tasks
+                        </button>
+                        <button class="btn btn-secondary" style="width: 100%;" onclick="exportTasks()">
+                            📥 Export Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Modal -->
+    <div class="modal" id="scheduleModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Schedule New Message</h3>
+                <button class="modal-close" onclick="closeScheduleModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="scheduleForm" onsubmit="submitSchedule(event)">
+                    <div class="form-group">
+                        <label class="form-label">Recipient Phone Number</label>
+                        <input type="tel" class="form-control" id="recipient" placeholder="+250788123456" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Message</label>
+                        <textarea class="form-control" id="messageBody" placeholder="Enter your message..." required></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Scheduled Time</label>
+                            <input type="datetime-local" class="form-control" id="scheduledTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Priority (0-9)</label>
+                            <input type="number" class="form-control" id="priority" value="5" min="0" max="9" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Message Type</label>
+                        <select class="form-control" id="messageType">
+                            <option value="text">Text Message</option>
+                            <option value="template">Template Message</option>
+                            <option value="media">Media Message</option>
+                        </select>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                        <button type="button" class="btn btn-secondary" onclick="closeScheduleModal()">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            Schedule Message
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = '/sms/whats';
+        const WS_URL = 'ws://localhost:8080/ws/tasks/';
+        const POLLING_INTERVAL = 5000; // 5 seconds fallback polling
+        
+        // State
+        let websocket = null;
+        let currentFilter = 'all';
+        let currentPage = 1;
+        let pageSize = 20;
+        let totalItems = 0;
+        let searchQuery = '';
+        let tasks = [];
+        let activityLog = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeWebSocket();
+            loadStatistics();
+            loadTasks();
+            loadActivity();
+            setDefaultScheduleTime();
+            
+            // Start polling as fallback
+            setInterval(() => {
+                if (!websocket || websocket.readyState !== WebSocket.OPEN) {
+                    loadStatistics();
+                    loadTasks();
+                }
+            }, POLLING_INTERVAL);
+        });
+
+        // WebSocket Connection
+        function initializeWebSocket() {
+            
+        }
+
+        function handleWebSocketMessage(data) {
+            switch(data.type) {
+                case 'task_update':
+                    updateTaskInList(data.task);
+                    loadStatistics();
+                    addActivityLog(data.task);
+                    showNotification(`Task ${data.task.status}`, data.task.recipient);
+                    break;
+                case 'statistics_update':
+                    updateStatistics(data.stats);
+                    break;
+                case 'batch_update':
+                    loadTasks();
+                    loadStatistics();
+                    break;
+            }
+        }
+
+        function updateConnectionStatus(connected) {
+            const statusDot = document.querySelector('.status-dot');
+            const statusText = document.getElementById('connectionStatus');
+            
+            if (connected) {
+                statusDot.className = 'status-dot connected';
+                statusText.textContent = 'Connected';
+            } else {
+                statusDot.className = 'status-dot disconnected';
+                statusText.textContent = 'Disconnected';
+            }
+        }
+
+        // API Calls
+        async function apiCall(endpoint, options = {}) {
+            const csrftoken = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1];
+
+            try {
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken,
+                        ...options.headers,
+                    },
+                });
+
+                // Parse JSON if possible
+                let data;
+                try {
+                    data = await response.json();
+                } catch {
+                    data = null;
+                }
+
+                // Handle non-OK responses with better messages
+                if (!response.ok) {
+                    let message = `Request failed (${response.status})`;
+
+                    if (response.status === 400) {
+                        message = data?.detail || "Bad Request: The data you submitted may be invalid.";
+                    } else if (response.status === 401) {
+                        message = "Unauthorized: Please log in again.";
+                    } else if (response.status === 403) {
+                        message = "Forbidden: You don't have permission to perform this action.";
+                    } else if (response.status === 404) {
+                        message = "Not Found: The requested resource could not be located.";
+                    } else if (response.status === 500) {
+                        message = "Server Error: Something went wrong on our end. Please try again later.";
+                    } else if (response.status >= 500) {
+                        message = "Server Error: Please contact the system administrator.";
+                    } else if (response.status === 0) {
+                        message = "Network Error: Unable to connect to the server.";
+                    }
+
+                    showNotification("Error", message, "error");
+                    throw new Error(message);
+                }
+
+                // Success case
+                return data;
+
+            } catch (error) {
+                console.error("API call failed:", error);
+                showNotification("Error", error.message || "Unknown error occurred.", "error");
+                throw error;
+            }
+        }
+
+
+        function getAuthToken() {
+            // Replace with actual token retrieval logic
+            return localStorage.getItem('authToken') || '';
+        }
+        
+
+        // Load Statistics
+        async function loadStatistics() {
+            try {
+                const stats = await apiCall('/tasks/statistics/');
+                updateStatistics(stats);
+            } catch (error) {
+                console.error('Failed to load statistics:', error);
+            }
+        }
+
+        function updateStatistics(stats) {
+            document.getElementById('totalTasks').textContent = formatNumber(stats.total);
+            document.getElementById('pendingTasks').textContent = formatNumber(stats.pending);
+            document.getElementById('processingTasks').textContent = formatNumber(stats.processing);
+            document.getElementById('completedTasks').textContent = formatNumber(stats.completed);
+            document.getElementById('failedTasks').textContent = formatNumber(stats.failed);
+            document.getElementById('successRate').textContent = `${stats.success_rate}%`;
+            
+            const avgTime = stats.avg_execution_time_ms;
+            document.getElementById('avgExecutionTime').textContent = avgTime 
+                ? `${Math.round(avgTime)}ms` 
+                : '0ms';
+        }
+
+        // Load Tasks
+        async function loadTasks() {
+            try {
+                const params = new URLSearchParams({
+                    page: currentPage,
+                    page_size: pageSize,
+                    ordering: '-created_at'
+                });
+
+                if (currentFilter !== 'all') {
+                    params.append('status', currentFilter);
+                }
+
+                if (searchQuery) {
+                    params.append('search', searchQuery);
+                }
+
+                const response = await apiCall(`/tasks/?${params}`);
+                tasks = response.results;
+                totalItems = response.count;
+                
+                renderTasks(tasks);
+                updatePagination();
+            } catch (error) {
+                console.error('Failed to load tasks:', error);
+                showEmptyState('Failed to load tasks');
+            }
+        }
+
+        function renderTasks(taskList) {
+            const container = document.getElementById('taskList');
+            
+            if (taskList.length === 0) {
+                showEmptyState('No tasks found');
+                return;
+            }
+
+            container.innerHTML = taskList.map(task => `
+                <div class="task-item" onclick="viewTaskDetails('${task.id}')">
+                    <div class="task-header">
+                        <div class="task-recipient">${escapeHtml(task.recipient)}</div>
+                        <span class="task-status ${task.status}">${task.status}</span>
+                    </div>
+                    <div class="task-message">${escapeHtml(task.message_body)}</div>
+                    <div class="task-meta">
+                        <span>📅 ${formatDateTime(task.scheduled_time)}</span>
+                        <span>⏱️ ${formatRelativeTime(task.created_at)}</span>
+                        ${task.retries > 0 ? `<span>🔄 ${task.retries} retries</span>` : ''}
+                        <span>🎯 Priority: ${task.priority}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateTaskInList(updatedTask) {
+            const index = tasks.findIndex(t => t.id === updatedTask.id);
+            if (index !== -1) {
+                tasks[index] = updatedTask;
+                renderTasks(tasks);
+            } else if (matchesCurrentFilter(updatedTask)) {
+                tasks.unshift(updatedTask);
+                renderTasks(tasks);
+            }
+        }
+
+        function matchesCurrentFilter(task) {
+            return currentFilter === 'all' || task.status === currentFilter;
+        }
+
+        // Load Activity
+        async function loadActivity() {
+            try {
+                const logs = await apiCall('/logs/?page_size=10&ordering=-timestamp');
+                activityLog = logs.results || [];
+                renderActivity(activityLog);
+            } catch (error) {
+                console.error('Failed to load activity:', error);
+            }
+        }
+
+        function renderActivity(activities) {
+            const container = document.getElementById('activityList');
+            
+            if (activities.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No recent activity</p></div>';
+                return;
+            }
+
+            container.innerHTML = activities.map(log => {
+                const iconClass = getActivityIconClass(log.status);
+                return `
+                    <div class="activity-item">
+                        <div class="activity-icon ${iconClass}"></div>
+                        <div class="activity-content">
+                            Task ${log.status}
+                            ${log.error_details ? `<br><span style="color: var(--danger); font-size: 12px;">${escapeHtml(log.error_details.error || '')}</span>` : ''}
+                        </div>
+                        <div class="activity-time">${formatRelativeTime(log.timestamp)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getActivityIconClass(status) {
+            const statusMap = {
+                'completed': 'success',
+                'failed': 'error',
+                'retrying': 'warning'
+            };
+            return statusMap[status] || '';
+        }
+
+        function addActivityLog(task) {
+            const log = {
+                status: task.status,
+                timestamp: new Date().toISOString(),
+                error_details: task.error_message ? { error: task.error_message } : null
+            };
+            activityLog.unshift(log);
+            activityLog = activityLog.slice(0, 10); // Keep only last 10
+            renderActivity(activityLog);
+        }
+
+        // Filter and Search
+        function filterTasks(status) {
+            currentFilter = status;
+            currentPage = 1;
+            
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            loadTasks();
+        }
+
+        function searchTasks() {
+            searchQuery = document.getElementById('searchInput').value;
+            currentPage = 1;
+            
+            // Debounce search
+            clearTimeout(window.searchTimeout);
+            window.searchTimeout = setTimeout(() => {
+                loadTasks();
+            }, 500);
+        }
+
+        // Pagination
+        function updatePagination() {
+            const totalPages = Math.ceil(totalItems / pageSize);
+            document.getElementById('currentPage').textContent = currentPage;
+            document.getElementById('totalPages').textContent = totalPages;
+            
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                loadTasks();
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(totalItems / pageSize);
+            if (currentPage < totalPages) {
+                currentPage++;
+                loadTasks();
+            }
+        }
+
+        // Modal Management
+        function openScheduleModal() {
+            document.getElementById('scheduleModal').classList.add('active');
+        }
+
+        function closeScheduleModal() {
+            document.getElementById('scheduleModal').classList.remove('active');
+            document.getElementById('scheduleForm').reset();
+            setDefaultScheduleTime();
+        }
+
+        function setDefaultScheduleTime() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() + 5);
+            const formatted = now.toISOString().slice(0, 16);
+            document.getElementById('scheduledTime').value = formatted;
+        }
+
+        // Submit Schedule
+        async function submitSchedule(event) {
+            event.preventDefault();
+            
+            const formData = {
+                recipient: document.getElementById('recipient').value,
+                message_body: document.getElementById('messageBody').value,
+                scheduled_time: document.getElementById('scheduledTime').value,
+                priority: parseInt(document.getElementById('priority').value),
+                options: {
+                    type: document.getElementById('messageType').value
+                }
+            };
+
+            try {
+                const response = await apiCall('/tasks/', {
+                    method: 'POST',
+                    body: JSON.stringify(formData)
+                });
+
+                showNotification('Success', 'Message scheduled successfully', 'success');
+                closeScheduleModal();
+                loadTasks();
+                loadStatistics();
+            } catch (error) {
+                showNotification('Error', `Failed to schedule message: ${error}`, 'error');
+            }
+        }
+
+        // Quick Actions
+        async function retryFailedTasks() {
+            if (!confirm('Retry all failed tasks?')) return;
+
+            try {
+                const failedTasks = await apiCall('/tasks/?status=failed');
+                let retried = 0;
+
+                for (const task of failedTasks.results) {
+                    try {
+                        await apiCall(`/tasks/${task.id}/retry/`, { method: 'POST' });
+                        retried++;
+                    } catch (error) {
+                        console.error(`Failed to retry task ${task.id}:`, error);
+                    }
+                }
+
+                showNotification('Success', `Retried ${retried} tasks`, 'success');
+                loadTasks();
+                loadStatistics();
+            } catch (error) {
+                showNotification('Error', 'Failed to retry tasks', 'error');
+            }
+        }
+
+        function exportTasks() {
+            const csv = convertToCSV(tasks);
+            downloadCSV(csv, 'whatsapp_tasks.csv');
+            showNotification('Success', 'Tasks exported successfully', 'success');
+        }
+
+        function convertToCSV(data) {
+            const headers = ['ID', 'Recipient', 'Message', 'Status', 'Scheduled Time', 'Priority'];
+            const rows = data.map(task => [
+                task.id,
+                task.recipient,
+                task.message_body.replace(/"/g, '""'),
+                task.status,
+                task.scheduled_time,
+                task.priority
+            ]);
+
+            return [headers, ...rows]
+                .map(row => row.map(cell => `"${cell}"`).join(','))
+                .join('\n');
+        }
+
+        function downloadCSV(csv, filename) {
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Task Details
+        async function viewTaskDetails(taskId) {
+            try {
+                const task = await apiCall(`/tasks/${taskId}/`);
+                showTaskDetailsModal(task);
+            } catch (error) {
+                showNotification('Error', 'Failed to load task details', 'error');
+            }
+        }
+
+        function showTaskDetailsModal(task) {
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Task Details</h3>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <div style="margin-bottom: 20px;">
+                            <strong>Status:</strong> <span class="task-status ${task.status}">${task.status}</span>
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <strong>Recipient:</strong> ${escapeHtml(task.recipient)}
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <strong>Message:</strong><br>
+                            <div style="background: var(--gray-50); padding: 12px; border-radius: 8px; margin-top: 8px;">
+                                ${escapeHtml(task.message_body)}
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                            <div>
+                                <strong>Scheduled:</strong><br>
+                                ${formatDateTime(task.scheduled_time)}
+                            </div>
+                            <div>
+                                <strong>Priority:</strong><br>
+                                ${task.priority}
+                            </div>
+                            <div>
+                                <strong>Retries:</strong><br>
+                                ${task.retries} / ${task.max_retries}
+                            </div>
+                            <div>
+                                <strong>Created:</strong><br>
+                                ${formatRelativeTime(task.created_at)}
+                            </div>
+                        </div>
+                        ${task.error_message ? `
+                            <div style="margin-bottom: 20px;">
+                                <strong>Error:</strong><br>
+                                <div style="background: #FEE2E2; color: #991B1B; padding: 12px; border-radius: 8px; margin-top: 8px;">
+                                    ${escapeHtml(task.error_message)}
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${task.execution_logs && task.execution_logs.length > 0 ? `
+                            <div>
+                                <strong>Execution Logs:</strong><br>
+                                <div style="max-height: 200px; overflow-y: auto; margin-top: 8px;">
+                                    ${task.execution_logs.map(log => `
+                                        <div style="padding: 8px; border-bottom: 1px solid var(--gray-200);">
+                                            <div style="font-size: 12px; color: var(--gray-600);">
+                                                ${formatDateTime(log.timestamp)}
+                                            </div>
+                                            <div style="font-size: 14px; margin-top: 4px;">
+                                                Status: ${log.status}
+                                                ${log.execution_time_ms ? ` (${log.execution_time_ms}ms)` : ''}
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                        <div style="display: flex; gap: 12px; margin-top: 24px;">
+                            ${task.can_retry ? `
+                                <button class="btn btn-primary" onclick="retryTask('${task.id}')">
+                                    🔄 Retry
+                                </button>
+                            ` : ''}
+                            ${task.status === 'pending' || task.status === 'queued' ? `
+                                <button class="btn btn-danger" onclick="cancelTask('${task.id}')">
+                                    ❌ Cancel
+                                </button>
+                            ` : ''}
+                            <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        async function retryTask(taskId) {
+            try {
+                await apiCall(`/tasks/${taskId}/retry/`, { method: 'POST' });
+                showNotification('Success', 'Task queued for retry', 'success');
+                document.querySelector('.modal.active').remove();
+                loadTasks();
+            } catch (error) {
+                showNotification('Error', 'Failed to retry task', 'error');
+            }
+        }
+
+        async function cancelTask(taskId) {
+            if (!confirm('Cancel this task?')) return;
+
+            try {
+                await apiCall(`/tasks/${taskId}/cancel/`, { method: 'POST' });
+                showNotification('Success', 'Task cancelled', 'success');
+                document.querySelector('.modal.active').remove();
+                loadTasks();
+            } catch (error) {
+                showNotification('Error', 'Failed to cancel task', 'error');
+            }
+        }
+
+        function refreshTasks() {
+            const btn = event.target.closest('button');
+            btn.style.transform = 'rotate(360deg)';
+            btn.style.transition = 'transform 0.5s';
+            
+            loadTasks();
+            loadStatistics();
+            
+            setTimeout(() => {
+                btn.style.transform = '';
+            }, 500);
+        }
+
+        // Utility Functions
+        function formatNumber(num) {
+            return new Intl.NumberFormat().format(num);
+        }
+
+        function formatDateTime(dateString) {
+            return new Date(dateString).toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function formatRelativeTime(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            const seconds = Math.floor(diff / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (seconds < 60) return 'just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            if (days < 7) return `${days}d ago`;
+            return formatDateTime(dateString);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showEmptyState(message) {
+            const container = document.getElementById('taskList');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        function showNotification(title, message, type = 'info') {
+            // Create toast notification
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: white;
+                padding: 16px 20px;
+                border-radius: 12px;
+                box-shadow: var(--shadow-xl);
+                max-width: 400px;
+                z-index: 10000;
+                animation: slideInRight 0.3s ease-out;
+            `;
+
+            const color = type === 'success' ? 'var(--success)' : 
+                         type === 'error' ? 'var(--danger)' : 'var(--info)';
+
+            toast.innerHTML = `
+                <div style="display: flex; gap: 12px; align-items: start;">
+                    <div style="width: 4px; height: 48px; background: ${color}; border-radius: 2px;"></div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; margin-bottom: 4px;">${title}</div>
+                        <div style="font-size: 14px; color: var(--gray-600);">${message}</div>
+                    </div>
+                    <button onclick="this.closest('div').remove()" style="background: none; border: none; cursor: pointer; font-size: 20px; color: var(--gray-400);">×</button>
+                </div>
+            `;
+
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease-out';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        // Add animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            @keyframes slideOutRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

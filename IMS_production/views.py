@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from IMS_production.models import Product
 from django.views.generic import ListView
 from permission.login import LoginAdmin

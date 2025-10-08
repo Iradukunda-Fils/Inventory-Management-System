@@ -1,19 +1,35 @@
 
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.http import JsonResponse
-from django.db.models import Q
-from django.core.paginator import Paginator
+from django.shortcuts import render,redirect
+from django.db.models import Q, Count, Avg, Sum
 from django.utils import timezone
-from celery import current_app
 from .models import SMSTask
 from .forms import SMSTaskForm, SMSTaskFilterForm
 from permission.login import LoginAdmin
-import json
+from rest_framework import viewsets, status, filters
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.pagination import PageNumberPagination
+from django_filters.rest_framework import DjangoFilterBackend
+from django.db import transaction
+from .models import MessageTask, TaskExecutionLog
+from .serializers import (
+    MessageTaskListSerializer,
+    MessageTaskDetailSerializer,
+    MessageTaskCreateSerializer,
+    MessageTaskUpdateSerializer,
+    BatchMessageTaskCreateSerializer,
+    TaskExecutionLogSerializer,
+    TaskStatusUpdateSerializer,
+    TaskStatisticsSerializer
+)
 
 # Utility functions
 def is_admin(user):
@@ -271,7 +287,7 @@ def bulk_actions(request):
 def task_analytics(request):
     """Provide analytics data for dashboard charts"""
     from django.db.models import Count
-    from datetime import datetime, timedelta
+    from datetime import timedelta
     
     # Status distribution
     status_data = list(SMSTask.objects.values('status').annotate(count=Count('id')))
@@ -299,3 +315,312 @@ def task_analytics(request):
             'success_rate': round((total_success / total_executions * 100) if total_executions > 0 else 0, 2)
         }
     })
+
+
+from .tasks import send_whatsapp
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class StandardResultsSetPagination(PageNumberPagination):
+    """Standard pagination configuration."""
+    page_size = 50
+    page_size_query_param = 'page_size'
+    max_page_size = 500
+
+from .tasks import send_whatsapp
+# from channels.layers import get_channel_layer
+# from asgiref.sync import async_to_sync
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class MessageTaskViewSet(viewsets.ModelViewSet):
+    """
+    Advanced task management with Celery, WebSocket notifications,
+    and optional scheduled/recurring sending.
+    """
+
+    queryset = MessageTask.objects.filter(is_deleted=False)
+    permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = {
+        'status': ['exact', 'in'],
+        'priority': ['exact', 'gte', 'lte'],
+        'scheduled_time': ['gte', 'lte'],
+        'created_at': ['gte', 'lte'],
+        'recipient': ['exact', 'icontains'],
+    }
+    search_fields = ['recipient', 'message_body', 'error_message']
+    ordering_fields = ['created_at', 'scheduled_time', 'priority', 'updated_at', 'status']
+    ordering = ['-created_at']
+
+    def get_serializer_class(self):
+        """Return appropriate serializer based on action."""
+        if self.action == 'list':
+            return MessageTaskListSerializer
+        elif self.action == 'create':
+            return MessageTaskCreateSerializer
+        elif self.action in ['update', 'partial_update']:
+            return MessageTaskUpdateSerializer
+        return MessageTaskDetailSerializer
+
+    def get_queryset(self):
+        """Optimize queryset with prefetch for detail views."""
+        queryset = super().get_queryset()
+        if self.action == 'retrieve':
+            queryset = queryset.prefetch_related('execution_logs')
+        return queryset
+
+    # -------------------------------------------------------------------------
+    # 🧩 Helper methods
+    # -------------------------------------------------------------------------
+    def enqueue_task(self, task):
+        """
+        Enqueue the Celery task and send a WebSocket notification.
+        """
+        try:
+            priority = max(0, min(9, task.priority))
+            send_whatsapp.apply_async(args=[str(task.id)], priority=priority)
+
+            task.status = MessageTask.Status.QUEUED
+            task.save(update_fields=['status', 'updated_at'])
+
+            self.broadcast_status(task, "queued")
+            logger.info(f"Enqueued task {task.id} with priority {priority}")
+            return True
+        except Exception as e:
+            logger.exception(f"Failed to enqueue task {task.id}: {e}")
+            return False
+
+    def broadcast_status(self, task, event_type):
+        """
+        Notify WebSocket groups about status updates.
+        """
+        pass
+        # channel_layer = get_channel_layer()
+        # payload = {
+        #     "type": "progress.update",
+        #     "data": {
+        #         "task_id": str(task.id),
+        #         "status": task.status,
+        #         "recipient": task.recipient,
+        #         "progress": getattr(task, "progress", None),
+        #         "message_body": task.message_body,
+        #     }
+        # }
+        # groups = [f"user_{task.created_by_id}", "admin_group"]
+        # for group in groups:
+        #     try:
+        #         async_to_sync(channel_layer.group_send)(group, payload)
+        #     except Exception as e:
+        #         logger.warning(f"Failed to send WebSocket update for {task.id}: {e}")
+
+    # -------------------------------------------------------------------------
+    # 🧩 Core operations
+    # -------------------------------------------------------------------------
+    def perform_create(self, serializer):
+        """
+        Create a task. 
+        If scheduled_time is in the future, delay execution using Celery.
+        Otherwise, enqueue immediately.
+        """
+        task = serializer.save(created_by=self.request.user)
+        now = timezone.now()
+
+        # 🕒 Future scheduled task
+        if task.scheduled_time > now:
+            try:
+                priority = max(0, min(9, task.priority))
+                send_whatsapp.apply_async(
+                    args=[str(task.id)],
+                    priority=priority,
+                    eta=task.scheduled_time  # schedule execution at this time
+                )
+                task.status = MessageTask.Status.PENDING
+                task.save(update_fields=['status', 'updated_at'])
+                self.broadcast_status(task, "scheduled")
+                logger.info(
+                    f"Scheduled task {task.id} for {task.scheduled_time} (priority {priority})"
+                )
+            except Exception as e:
+                logger.exception(f"Failed to schedule future task {task.id}: {e}")
+                task.status = MessageTask.Status.FAILED
+                task.error_message = str(e)
+                task.save(update_fields=['status', 'error_message', 'updated_at'])
+                self.broadcast_status(task, "failed")
+
+        # 🚀 Immediate execution (scheduled_time <= now)
+        else:
+            self.enqueue_task(task)
+
+        logger.info(f"Created task {task.id} for {task.recipient}")
+
+    def perform_destroy(self, instance):
+        """Soft delete instead of hard delete."""
+        instance.soft_delete()
+        self.broadcast_status(instance, "deleted")
+        logger.info(f"Soft deleted task {instance.id}")
+
+    @action(detail=False, methods=['post'])
+    def batch(self, request):
+        """Batch create multiple tasks."""
+        serializer = BatchMessageTaskCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        tasks = serializer.save()
+
+        now = timezone.now()
+        enqueued_count = 0
+        for task in tasks:
+            if task.scheduled_time <= now and self.enqueue_task(task):
+                enqueued_count += 1
+
+        return Response({
+            'created': len(tasks),
+            'enqueued': enqueued_count,
+            'task_ids': [str(t.id) for t in tasks]
+        }, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'])
+    def cancel(self, request, pk=None):
+        """Cancel a pending or queued task."""
+        task = self.get_object()
+
+        if task.status not in [MessageTask.Status.PENDING, MessageTask.Status.QUEUED]:
+            return Response(
+                {'error': f'Cannot cancel task with status: {task.status}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        with transaction.atomic():
+            task.status = MessageTask.Status.CANCELLED
+            task.save(update_fields=['status', 'updated_at'])
+
+        self.broadcast_status(task, "cancelled")
+        logger.info(f"Cancelled MessageTask {task.id}")
+        return Response({'status': 'cancelled', 'task_id': str(task.id)})
+
+    @action(detail=True, methods=['post'])
+    def retry(self, request, pk=None):
+        """Retry a failed task."""
+        task = self.get_object()
+
+        if not task.can_retry():
+            return Response(
+                {'error': 'Task is not eligible for retry'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        with transaction.atomic():
+            task.status = MessageTask.Status.PENDING
+            task.error_message = None
+            task.scheduled_time = timezone.now()
+            task.save(update_fields=['status', 'error_message', 'scheduled_time', 'updated_at'])
+
+        if self.enqueue_task(task):
+            self.broadcast_status(task, "retrying")
+            return Response({'status': 'queued', 'task_id': str(task.id)})
+        else:
+            return Response({'error': 'Failed to enqueue task'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['get'])
+    def statistics(self, request):
+        """Get dashboard statistics."""
+        queryset = self.filter_queryset(self.get_queryset())
+        status_counts = queryset.values('status').annotate(count=Count('id'))
+
+        stats = {s: 0 for s in ['pending', 'queued', 'processing', 'completed', 'failed', 'retrying', 'cancelled']}
+        stats['total'] = queryset.count()
+        for item in status_counts:
+            stats[item['status']] = item['count']
+
+        total_finished = stats['completed'] + stats['failed']
+        stats['success_rate'] = round((stats['completed'] / total_finished) * 100, 2) if total_finished else 0.0
+
+        avg_time = TaskExecutionLog.objects.filter(task__in=queryset).aggregate(avg=Avg('execution_time_ms'))
+        stats['avg_execution_time_ms'] = round(avg_time['avg'], 2) if avg_time['avg'] else None
+        stats['total_retries'] = queryset.aggregate(Sum('retries'))['retries__sum'] or 0
+
+        serializer = TaskStatisticsSerializer(stats)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def update_status(self, request, pk=None):
+        """Manually update task status."""
+        task = self.get_object()
+        serializer = TaskStatusUpdateSerializer(instance=task, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        new_status = serializer.validated_data['status']
+        reason = serializer.validated_data.get('reason', '')
+
+        with transaction.atomic():
+            task.status = new_status
+            if reason:
+                task.error_message = f"Manual update: {reason}"
+            task.save(update_fields=['status', 'error_message', 'updated_at'])
+
+        self.broadcast_status(task, "manual_update")
+        logger.info(f"Manually updated MessageTask {task.id} to {new_status}")
+        return Response(MessageTaskDetailSerializer(task).data)
+
+
+
+class TaskExecutionLogViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Read-only ViewSet for execution logs.
+    
+    Endpoints:
+    - GET /api/logs/ - List all logs with filtering
+    - GET /api/logs/{id}/ - Retrieve specific log
+    """
+    
+    queryset = TaskExecutionLog.objects.all()
+    serializer_class = TaskExecutionLogSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    
+    filterset_fields = {
+        'task': ['exact'],
+        'status': ['exact', 'in'],
+        'timestamp': ['gte', 'lte'],
+        'execution_time_ms': ['gte', 'lte']
+    }
+    
+    ordering_fields = ['timestamp', 'execution_time_ms']
+    ordering = ['-timestamp']
+    
+    def get_queryset(self):
+        """Optimize query with select_related."""
+        return super().get_queryset().select_related('task')
+    
+    @action(detail=False, methods=['get'])
+    def by_task(self, request):
+        """
+        Get logs for a specific task.
+        
+        GET /api/logs/by_task/?task_id={uuid}
+        """
+        task_id = request.query_params.get('task_id')
+        if not task_id:
+            return Response(
+                {'error': 'task_id parameter is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        logs = self.get_queryset().filter(task_id=task_id)
+        page = self.paginate_queryset(logs)
+        
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        
+        serializer = self.get_serializer(logs, many=True)
+        return Response(serializer.data)
+
+
+def whatsapp_view(request):
+    return render(request, "whatsapp/index.html")

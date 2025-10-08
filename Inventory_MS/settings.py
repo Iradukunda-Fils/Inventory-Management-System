@@ -69,7 +69,11 @@ INSTALLED_APPS = [
     "crispy_bootstrap5",
     "django_celery_beat",
     "phonenumber_field",
+    'rest_framework',
+    'rest_framework.authtoken',
+    'django_filters',
 ]
+
 
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = [ "bootstrap4", "bootstrap5" ]
@@ -197,6 +201,16 @@ CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://redis:6379/0')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379/0')
 
 
+# Task time limits
+CELERY_TASK_SOFT_TIME_LIMIT = 300  # 5 minutes soft limit
+CELERY_TASK_TIME_LIMIT = 360  # 6 minutes hard limit
+
+# Message task configuration
+MESSAGE_TASK_BATCH_SIZE = 200  # Tasks to process per batch
+MESSAGE_TASK_RATE_LIMIT = None  # Set to "100/m" for 100 tasks per minute
+
+
+
 # Email Configuration
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"                       # Use SMTP backend
 EMAIL_HOST = "smtp.gmail.com"                                                       # SMTP server
@@ -214,4 +228,101 @@ SMS_API = os.getenv("SMS_API", None)
 SMS_SENDER = os.getenv("SMS_SENDER", None)
 
 
+# WhatsApp Configuration
+WHATSAPP_PHONE_ID = os.getenv("WHATSAPP_PHONE_ID", "")
+WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN", "")
+WHATSAPP_APP_SECRET = os.getenv("WHATSAPP_APP_SECRET", "")
+WHATSAPP_BUSINESS_ID = os.getenv("WHATSAPP_BUSINESS_ID", "")
 
+WHATSAPP_GRAPH_API_URL = os.getenv("GRAPH_API_URL", "https://graph.facebook.com/v20.0")
+WHATSAPP_DEFAULT_TIMEOUT = os.getenv("DEFAULT_TIMEOUT", 30.0)
+WHATSAPP_MAX_BATCH_SIZE = os.getenv("MAX_BATCH_SIZE", 100)
+WHATSAPP_MAX_TEXT_LENGTH = os.getenv("MAX_TEXT_LENGTH", 4096)
+
+
+# REST Framework Configuration
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 50,
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.MultiPartParser',
+    ],
+    #'EXCEPTION_HANDLER': 'your_app.exceptions.custom_exception_handler',
+}
+
+# # Logging Configuration
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'formatters': {
+#         'verbose': {
+#             'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+#             'style': '{',
+#         },
+#         'simple': {
+#             'format': '{levelname} {message}',
+#             'style': '{',
+#         },
+#     },
+#     'filters': {
+#         'require_debug_false': {
+#             '()': 'django.utils.log.RequireDebugFalse',
+#         },
+#     },
+#     'handlers': {
+#         'console': {
+#             'level': 'INFO',
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'verbose',
+#         },
+#         'file': {
+#             'level': 'INFO',
+#             'class': 'logging.handlers.RotatingFileHandler',
+#             'filename': 'logs/whatsapp_messaging.log',
+#             'maxBytes': 1024 * 1024 * 15,  # 15MB
+#             'backupCount': 10,
+#             'formatter': 'verbose',
+#         },
+#         'celery': {
+#             'level': 'INFO',
+#             'class': 'logging.handlers.RotatingFileHandler',
+#             'filename': 'logs/celery.log',
+#             'maxBytes': 1024 * 1024 * 15,
+#             'backupCount': 10,
+#             'formatter': 'verbose',
+#         },
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['console', 'file'],
+#             'level': 'INFO',
+#             'propagate': False,
+#         },
+#         'celery': {
+#             'handlers': ['console', 'celery'],
+#             'level': 'INFO',
+#             'propagate': False,
+#         },
+#         'your_app': {
+#             'handlers': ['console', 'file'],
+#             'level': 'INFO',
+#             'propagate': False,
+#         },
+#     },
+# }

@@ -152,7 +152,6 @@ class SMSTaskForm(forms.ModelForm):
     def _create_periodic_task(self, instance, schedule_type):
         """Create periodic task based on schedule type"""
         from django_celery_beat.models import PeriodicTask
-        from sms_tasks.tasks import send_sms
         
         # Delete existing periodic task
         if instance.periodic_task:
